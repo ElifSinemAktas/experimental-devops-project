@@ -58,5 +58,5 @@ sudo apt-get install -y kubelet kubeadm kubectl
 # Prevent automatic updates
 sudo apt-mark hold kubelet kubeadm kubectl
 
-# Enable and start kubelet service
-sudo systemctl enable --now kubelet
+# # Enable and start kubelet service
+# sudo systemctl enable --now kubelet

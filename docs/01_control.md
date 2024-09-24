@@ -32,4 +32,18 @@ kubelet --version
 ip a
 ```
 
+- Control hosts
 
+```bash
+cat /etc/hosts
+```
+
+Output:
+
+```
+192.168.1.11 controlplane
+192.168.1.30 monitoring
+192.168.1.40 loadbalancer
+192.168.1.20 node01
+192.168.1.21 node02
+```
