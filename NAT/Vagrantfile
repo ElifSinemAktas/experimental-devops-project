@@ -1,0 +1,84 @@
+# Define the number of worker nodes
+NUM_WORKER_NODES = 2
+
+# Network parameters for NAT mode (Static IPs)
+IP_NW = "192.168.56"
+MASTER_IP_START = 11
+NODE_IP_START = 20
+MONITOR_IP_START = 30  # Add IP for monitoring VM
+LOAD_BALANCER_IP_START = 40  # Add IP for load balancer VM
+
+# Sets up hosts file and DNS
+def setup_dns(node)
+  # Set up /etc/hosts, including control plane, worker nodes, monitoring, and load balancer
+  node.vm.provision "setup-hosts", :type => "shell", :path => "scripts/setup-hosts.sh", run: "always" do |s|
+    s.args = [IP_NW, NUM_WORKER_NODES, MASTER_IP_START, NODE_IP_START, MONITOR_IP_START, LOAD_BALANCER_IP_START]
+  end
+end
+
+# Runs provisioning steps required by control plane and worker nodes
+def provision_kubernetes_node(node)
+  setup_dns node
+  node.vm.provision "setup-ssh", :type => "shell", :path => "scripts/setup-ssh.sh"
+  node.vm.provision "install-k8s", :type => "shell", :path => "scripts/install-k8s.sh"
+end
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.boot_timeout = 900
+  config.vm.box_check_update = false
+
+  # Provision Control Plane Node
+  config.vm.define "controlplane" do |node|
+    node.vm.provider "virtualbox" do |vb|
+      vb.name = "controlplane"
+      vb.memory = 4096
+      vb.cpus = 2
+    end
+    node.vm.hostname = "controlplane"
+    node.vm.network :private_network, ip: "#{IP_NW}.#{MASTER_IP_START}"
+    node.vm.network "forwarded_port", guest: 22, host: 2710
+    provision_kubernetes_node node
+  end
+
+  # Provision Worker Nodes
+  (1..NUM_WORKER_NODES).each do |i|
+    config.vm.define "node0#{i}" do |node|
+      node.vm.provider "virtualbox" do |vb|
+        vb.name = "node0#{i}"
+        vb.memory = 2048
+        vb.cpus = 2
+      end
+      node.vm.hostname = "node0#{i}"
+      node.vm.network :private_network, ip: "#{IP_NW}.#{NODE_IP_START + i}"
+      node.vm.network "forwarded_port", guest: 22, host: 2720 + i
+      provision_kubernetes_node node
+    end
+  end
+
+  # Provision Monitoring Node (optional, for real-world setup)
+  config.vm.define "monitoring" do |node|
+    node.vm.provider "virtualbox" do |vb|
+      vb.name = "monitoring"
+      vb.memory = 2048
+      vb.cpus = 2
+    end
+    node.vm.hostname = "monitoring"
+    node.vm.network :private_network, ip: "#{IP_NW}.#{MONITOR_IP_START}"
+    node.vm.network "forwarded_port", guest: 22, host: 2730
+    # Add any additional provisioning specific to monitoring tools here
+  end
+
+  # Provision Load Balancer (optional, for real-world setup)
+  config.vm.define "loadbalancer" do |node|
+    node.vm.provider "virtualbox" do |vb|
+      vb.name = "loadbalancer"
+      vb.memory = 2048
+      vb.cpus = 2
+    end
+    node.vm.hostname = "loadbalancer"
+    node.vm.network :private_network, ip: "#{IP_NW}.#{LOAD_BALANCER_IP_START}"
+    node.vm.network "forwarded_port", guest: 22, host: 2740
+    # Add any additional provisioning specific to load balancer setup here
+  end
+end
