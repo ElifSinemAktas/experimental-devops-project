@@ -44,7 +44,8 @@ end
 # Sets up hosts file and DNS
 def setup_dns(node)
   node.vm.provision "setup-hosts", :type => "shell", :path => "scripts/setup-hosts.sh", run: "always" do |s|
-    s.args = [NUM_WORKER_NODES, MASTER_IP_START, NODE_IP_START, MONITOR_IP_START, LOAD_BALANCER_IP_START]
+    # Pass the network prefix (IP_NW) and other parameters to the setup-hosts.sh script
+    s.args = [IP_NW, NUM_WORKER_NODES, MASTER_IP_START, NODE_IP_START, MONITOR_IP_START, LOAD_BALANCER_IP_START]
   end
 end
 

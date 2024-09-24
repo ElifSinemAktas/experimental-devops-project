@@ -58,5 +58,5 @@ sudo apt-get install -y kubelet kubeadm kubectl
 # Prevent automatic updates
 sudo apt-mark hold kubelet kubeadm kubectl
 
-# # Configure kubelet to use the systemd cgroup driver / I remove it because systemd is default.
-# sudo sed -i 's/^#\?KUBELET_EXTRA_ARGS=.*/KUBELET_EXTRA_ARGS=--cgroup-driver=systemd/' /etc/default/kubelet
+# Enable and start kubelet service
+sudo systemctl enable --now kubelet
