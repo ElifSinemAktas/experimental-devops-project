@@ -1,12 +1,8 @@
-# Define the number of worker nodes
-NUM_WORKER_NODES = 2
-
 # Network parameters for BRIDGE mode (Static IPs)
-IP_NW = "192.168.1"  # This will need to match your local network
-MASTER_IP_START = 11
+IP_NW = "192.168.56"  # This will need to match your local network
+MASTER_IP_START = 10
 NODE_IP_START = 20
-MONITOR_IP_START = 30
-LOAD_BALANCER_IP_START = 40
+LOAD_BALANCER_IP_START = 30
 
 # Host operating system detection
 module OS
@@ -45,7 +41,7 @@ end
 def setup_dns(node)
   node.vm.provision "setup-hosts", :type => "shell", :path => "scripts/setup-hosts.sh", run: "always" do |s|
     # Pass the network prefix (IP_NW) and other parameters to the setup-hosts.sh script
-    s.args = [IP_NW, NUM_WORKER_NODES, MASTER_IP_START, NODE_IP_START, MONITOR_IP_START, LOAD_BALANCER_IP_START]
+    s.args = [IP_NW, MASTER_IP_START, NODE_IP_START, LOAD_BALANCER_IP_START]
   end
 end
 
@@ -62,50 +58,44 @@ Vagrant.configure("2") do |config|
   config.vm.boot_timeout = 900
   config.vm.box_check_update = false
 
-  # Provision Control Plane Node
-  config.vm.define "controlplane" do |node|
-    node.vm.provider "virtualbox" do |vb|
-      vb.name = "controlplane"
-      vb.memory = 4096
-      vb.cpus = 2
-    end
-    node.vm.hostname = "controlplane"
-    node.vm.network :public_network, ip: "#{IP_NW}.#{MASTER_IP_START}", bridge: get_bridge_adapter()
-    provision_kubernetes_node node
-  end
-
-  # Provision Worker Nodes
-  (1..NUM_WORKER_NODES).each do |i|
-    config.vm.define "node0#{i}" do |node|
+  # Provision Control Plane Nodes
+  (1..2).each do |i|
+    config.vm.define "controlplane0#{i}" do |node|
       node.vm.provider "virtualbox" do |vb|
-        vb.name = "node0#{i}"
-        vb.memory = 2048
-        vb.cpus = 2
+        vb.name = "controlplane0#{i}"
+        if i == 1
+          vb.memory = 4096  # 4 GB RAM for controlplane01
+        else
+          vb.memory = 2048  # 2 GB RAM for controlplane02
+        end
+        vb.cpus = 2         # 2 CPU for both control planes
       end
-      node.vm.hostname = "node0#{i}"
-      node.vm.network :public_network, ip: "#{IP_NW}.#{NODE_IP_START + i - 1}", bridge: get_bridge_adapter()
+      node.vm.hostname = "controlplane0#{i}"
+      node.vm.network :public_network, ip: "#{IP_NW}.#{MASTER_IP_START + i - 1}", bridge: get_bridge_adapter()
       provision_kubernetes_node node
     end
   end
 
-  # Provision Monitoring Node
-  config.vm.define "monitoring" do |node|
-    node.vm.provider "virtualbox" do |vb|
-      vb.name = "monitoring"
-      vb.memory = 2048
-      vb.cpus = 2
+  # Provision 2 Worker Nodes
+  (1..2).each do |i|
+    config.vm.define "worker0#{i}" do |node|
+      node.vm.provider "virtualbox" do |vb|
+        vb.name = "worker0#{i}"
+        vb.memory = 3072  # 3 GB RAM for worker nodes to handle apps and monitoring
+        vb.cpus = 2       # 2 CPUs for worker nodes
+      end
+      node.vm.hostname = "worker0#{i}"
+      node.vm.network :public_network, ip: "#{IP_NW}.#{NODE_IP_START + i - 1}", bridge: get_bridge_adapter()
+      provision_kubernetes_node node
     end
-    node.vm.hostname = "monitoring"
-    node.vm.network :public_network, ip: "#{IP_NW}.#{MONITOR_IP_START}", bridge: get_bridge_adapter()
-    setup_dns node
   end
 
   # Provision Load Balancer Node
   config.vm.define "loadbalancer" do |node|
     node.vm.provider "virtualbox" do |vb|
       vb.name = "loadbalancer"
-      vb.memory = 2048
-      vb.cpus = 2
+      vb.memory = 1024  # 1 GB RAM for load balancer
+      vb.cpus = 1       # 1 CPU for load balancer
     end
     node.vm.hostname = "loadbalancer"
     node.vm.network :public_network, ip: "#{IP_NW}.#{LOAD_BALANCER_IP_START}", bridge: get_bridge_adapter()

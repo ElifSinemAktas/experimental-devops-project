@@ -1,4 +1,4 @@
-#### Check the installation
+## Check the installation
 
 - Connect vm
 
@@ -38,12 +38,12 @@ ip a
 cat /etc/hosts
 ```
 
-Output:
+Output  includes the entries below:
 
 ```
-192.168.1.11 controlplane
-192.168.1.30 monitoring
-192.168.1.40 loadbalancer
-192.168.1.20 node01
-192.168.1.21 node02
+192.168.56.10 controlplane01
+192.168.56.11 controlplane02
+192.168.56.30 loadbalancer
+192.168.56.20 worker01
+192.168.56.21 worker02
 ```

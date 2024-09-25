@@ -58,5 +58,6 @@ sudo apt-get install -y kubelet kubeadm kubectl
 # Prevent automatic updates
 sudo apt-mark hold kubelet kubeadm kubectl
 
-# # Enable and start kubelet service
-# sudo systemctl enable --now kubelet
+# Enable and start kubelet service. The kubelet is now restarting every few seconds, 
+# as it waits in a crashloop for kubeadm to tell it what to do.
+sudo systemctl enable --now kubelet
