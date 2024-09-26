@@ -63,11 +63,7 @@ Vagrant.configure("2") do |config|
     config.vm.define "controlplane0#{i}" do |node|
       node.vm.provider "virtualbox" do |vb|
         vb.name = "controlplane0#{i}"
-        if i == 1
-          vb.memory = 4096  # 4 GB RAM for controlplane01
-        else
-          vb.memory = 2048  # 2 GB RAM for controlplane02
-        end
+        vb.memory = 2048    # 2 GB RAM
         vb.cpus = 2         # 2 CPU for both control planes
       end
       node.vm.hostname = "controlplane0#{i}"

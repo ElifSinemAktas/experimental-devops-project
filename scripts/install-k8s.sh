@@ -7,8 +7,8 @@ sudo sysctl -w net.ipv4.ip_forward=1
 # Persist the packet forwarding setting across reboots
 sudo sh -c "echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf"
 
-# Apply the changes
-sudo sysctl -p
+# Apply the changes without reboot
+sudo sysctl --system
 
 # Install prerequisites
 sudo apt-get update

@@ -18,24 +18,21 @@ sudo apt-get install haproxy -y
 Edit the HAProxy configuration file to set up load balancing for your Kubernetes API servers:
 
 ```bash
-sudo nano /etc/haproxy/haproxy.cfg
-```
-
-Add the following configuration:
-
-```bash
-frontend k8s-api
-    bind *:6443
+cat <<EOF | sudo tee /etc/haproxy/haproxy.cfg
+frontend kubernetes
+    bind 192.168.56.30:6443
     option tcplog
     mode tcp
-    default_backend k8s-masters
+    default_backend kubernetes-controlplane-nodes
 
-backend k8s-masters
+backend kubernetes-controlplane-nodes
     mode tcp
     balance roundrobin
     option tcp-check
-    server controlplane01 192.168.56.10:6443 check
-    server controlplane02 192.168.56.11:6443 check
+    server controlplane01 192.168.56.10:6443 check fall 3 rise 2
+    server controlplane02 192.168.56.11:6443 check fall 3 rise 2
+EOF
+
 ```
 
 In this configuration:
@@ -51,7 +48,7 @@ sudo systemctl restart haproxy
 ```
 
 - Test the Setup
-To verify that HAProxy is correctly balancing the traffic, you can run the following command from your worker nodes or any machine that has access to the load balancer:
+To verify that HAProxy is correctly balancing the traffic, you can run the following command **from your worker nodes** or any machine that has access to the load balancer:
 
 ```bash
 curl -k https://192.168.56.30:6443/healthz

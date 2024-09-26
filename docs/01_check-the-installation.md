@@ -3,7 +3,7 @@
 - Connect vm
 
 ```bash
-vagrant ssh <vm-name> #(controlplane, node01 etc.)
+vagrant ssh <vm-name> #(controlplane01, worker01 etc.)
 ```
 
 - Control containerd
