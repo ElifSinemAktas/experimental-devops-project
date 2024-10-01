@@ -1,0 +1,167 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :-
+
+# Configuration variables
+MASTER_COUNT = 3
+WORKER_COUNT = 3
+MASTER_IP_PREFIX = "192.168.56."
+WORKER_IP_PREFIX = "192.168.56."
+LOADBALANCER_IP = "192.168.56.30"
+MASTER_IP_START = 10
+WORKER_IP_START = 20
+
+# Ubuntu box version
+UBUNTU_BOX = "ubuntu/jammy64"
+
+ENV['VAGRANT_DEFAULT_PROVIDER'] = "virtualbox"
+
+# Host operating system detection
+module OS
+  def OS.windows?
+    (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil
+  end
+
+  def OS.mac?
+    (/darwin/ =~ RUBY_PLATFORM) != nil
+  end
+
+  def OS.unix?
+    !OS.windows?
+  end
+
+  def OS.linux?
+    OS.unix? and not OS.mac?
+  end
+end
+
+# Determine host adapter for bridging in BRIDGE mode
+def get_bridge_adapter()
+  if OS.windows?
+    return %x{powershell -Command "Get-NetRoute -DestinationPrefix 0.0.0.0/0 | Get-NetAdapter | Select-Object -ExpandProperty InterfaceDescription"}.chomp
+  elsif OS.linux?
+    return %x{ip route | grep default | awk '{ print $5 }'}.chomp
+  elsif OS.mac?
+    return %x{networksetup -listallhardwareports | awk '/Wi-Fi|Ethernet/{getline; print $2}'}.chomp
+  end
+end
+
+BRIDGE_ADAPTER = get_bridge_adapter()
+
+# Function to configure hosts file
+def configure_hosts(master_count, worker_count, master_ip_prefix, worker_ip_prefix, loadbalancer_ip)
+  <<-SHELL
+    echo "Configuring /etc/hosts..."
+    for i in $(seq 1 #{master_count}); do
+      echo "#{master_ip_prefix}$((#{MASTER_IP_START} + i)) master$i" >> /etc/hosts
+    done
+    for i in $(seq 1 #{worker_count}); do
+      echo "#{worker_ip_prefix}$((#{WORKER_IP_START} + i)) worker$i" >> /etc/hosts
+    done
+    echo "#{loadbalancer_ip} loadbalancer" >> /etc/hosts
+  SHELL
+end
+
+# Google DNS configuration and check internet connectivity
+def configure_google_dns
+  <<-SHELL
+    echo "Configuring Google DNS..."
+    sudo sed -i 's/^#DNS=.*/DNS=8.8.8.8/' /etc/systemd/resolved.conf
+    sudo systemctl restart systemd-resolved
+
+    # Verify DNS configuration
+    if ! grep -q "8.8.8.8" /etc/systemd/resolved.conf; then
+        echo "Failed to set Google DNS." >&2
+        exit 1
+    fi
+
+    # Check internet connectivity
+    if ping -c 4 google.com > /dev/null; then
+        echo "Internet connection is active."
+    else
+        echo "Failed to connect to the internet." >&2
+        exit 1
+    fi
+  SHELL
+end
+
+# Updated SSH configuration and restart logic with error handling
+def configure_ssh
+  <<-SHELL
+    # Enable password authentication in sshd
+    sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    sed -i 's/^KbdInteractiveAuthentication no/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
+    echo "PermitRootLogin yes" | sudo tee -a /etc/ssh/sshd_config
+
+    # Restart SSH service to apply changes
+    if systemctl restart sshd; then
+        echo "SSH service restarted successfully."
+    else
+        echo "Failed to restart SSH service." >&2
+        exit 1
+    fi
+  SHELL
+end
+
+# Unified provisioning for all nodes
+def provision_node(master_count, worker_count, master_ip_prefix, worker_ip_prefix, loadbalancer_ip)
+  <<-SHELL
+    sudo apt update && sudo apt upgrade -y
+    sed -i "/swap/d" /etc/fstab
+    swapoff -a
+    systemctl disable --now ufw
+
+    # Configure SSH
+    #{configure_ssh}
+
+    # Configure Google DNS and check internet
+    #{configure_google_dns}
+
+    # Configure hosts file
+    #{configure_hosts(master_count, worker_count, master_ip_prefix, worker_ip_prefix, loadbalancer_ip)}
+  SHELL
+end
+
+Vagrant.configure("2") do |config|
+  # Control Plane Nodes
+  (1..MASTER_COUNT).each do |i|
+    config.vm.define "master#{i}" do |master|
+      master.vm.box = UBUNTU_BOX
+      master.vm.network "public_network", bridge: BRIDGE_ADAPTER, ip: "#{MASTER_IP_PREFIX}#{MASTER_IP_START + i}"
+      master.vm.hostname = "master#{i}"
+      master.vm.provider :virtualbox do |vb|
+        vb.name = "master-#{i}"  # Custom VM name
+        vb.memory = 2048
+        vb.cpus = 2
+      end
+      master.vm.provision "shell", inline: provision_node(MASTER_COUNT, WORKER_COUNT, MASTER_IP_PREFIX, WORKER_IP_PREFIX, LOADBALANCER_IP)
+    end
+  end
+
+  # Worker Nodes
+  (1..WORKER_COUNT).each do |i|
+    config.vm.define "worker#{i}" do |worker|
+      worker.vm.box = UBUNTU_BOX
+      worker.vm.network "public_network", bridge: BRIDGE_ADAPTER, ip: "#{WORKER_IP_PREFIX}#{WORKER_IP_START + i}"
+      worker.vm.hostname = "worker#{i}"
+      worker.vm.provider :virtualbox do |vb|
+        vb.name = "worker-#{i}"  # Custom VM name
+        vb.memory = 2048
+        vb.cpus = 2
+      end
+      worker.vm.provision "shell", inline: provision_node(MASTER_COUNT, WORKER_COUNT, MASTER_IP_PREFIX, WORKER_IP_PREFIX, LOADBALANCER_IP)
+    end
+  end
+
+  # Load Balancer
+  config.vm.define "loadbalancer" do |lb|
+    lb.vm.box = UBUNTU_BOX
+    lb.vm.network "public_network", bridge: BRIDGE_ADAPTER, ip: LOADBALANCER_IP
+    lb.vm.hostname = "loadbalancer"
+    lb.vm.provider :virtualbox do |vb|
+      vb.name = "loadbalancer"  # Custom VM name
+      vb.memory = 2048
+      vb.cpus = 2
+    end
+    lb.vm.provision "shell", inline: provision_node(MASTER_COUNT, WORKER_COUNT, MASTER_IP_PREFIX, WORKER_IP_PREFIX, LOADBALANCER_IP)
+  end
+end
