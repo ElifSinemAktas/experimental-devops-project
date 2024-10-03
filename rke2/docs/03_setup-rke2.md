@@ -2,19 +2,19 @@
 
 #### Add first server node
 
-- Change to root user
+Change to root user
 
 ```bash
 sudo -i
 ```
 
-- First, you must create the directory where the RKE2 config file is going to be placed
+First, you must create the directory where the RKE2 config file is going to be placed
 
 ```bash
 mkdir -p /etc/rancher/rke2/
 ```
 
-- Next, create the RKE2 config file at /etc/rancher/rke2/config.yaml.
+Next, create the RKE2 config file at /etc/rancher/rke2/config.yaml.
 
 **Note**: If you do not specify a pre-shared secret, RKE2 will generate one and place it at /var/lib/rancher/rke2/server/node-token.
 
@@ -67,7 +67,7 @@ Customizing these options allows you to better control and optimize your cluster
 ```
 
 
-- After that, you need to run the install command and enable and start rke2
+After that, you need to run the install command and enable and start rke2
 
 ```bash
 curl -sfL https://get.rke2.io | sh -
@@ -83,7 +83,7 @@ cat /var/lib/rancher/rke2/server/node-token
 
 #### Add next server node
 
-- Change to root user
+Change to root user
 
 ```bash
 sudo -i

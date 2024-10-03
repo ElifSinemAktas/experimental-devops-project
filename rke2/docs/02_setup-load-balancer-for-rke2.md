@@ -55,7 +55,7 @@ nginx -V 2>&1 | grep -o with-stream
 
 If the output includes with-stream, then the module is available.
 
-#### Configure NGINX as a Load Balancer**
+#### Configure NGINX as a Load Balancer
 
 Edit the NGINX configuration to route traffic to your master nodes.
 
