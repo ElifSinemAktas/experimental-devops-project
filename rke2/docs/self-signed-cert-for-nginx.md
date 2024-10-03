@@ -13,13 +13,14 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 -out /etc/nginx/ssl/nginx-selfsigned.crt
 ```
 
+```
 -x509: This option generates a self-signed certificate.
 -nodes: This option means the private key should not be password protected.
 -days 365: Specifies the validity of the certificate (in days).
 -newkey rsa:2048: This option generates a new 2048-bit RSA key.
 -keyout: Specifies where the private key will be saved.
 -out: Specifies where the self-signed certificate will be saved.
-
+```
 
 Here’s an example of the information you will need to provide:
 
