@@ -1,2 +1,3 @@
-kubeadm/.vagrant
-rke2/.vagrant
+kubeadm/virtualbox/.vagrant
+rke2/virtualbox/.vagrant
+rke2/hyperv/.vagrant

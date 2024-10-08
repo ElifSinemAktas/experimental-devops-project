@@ -21,9 +21,9 @@ Next, create the RKE2 config file at /etc/rancher/rke2/config.yaml.
 ```bash
 cat << EOF > /etc/rancher/rke2/config.yaml
 tls-san:
-  - 192.168.56.30
+  - 192.168.68.99
   - loadbalancer
-node-ip: "192.168.56.11"
+node-ip: "192.168.68.101"
 cni: "calico"
 write-kubeconfig-mode: "0644"
 EOF
@@ -99,12 +99,12 @@ Create config file
 
 ```bash
 cat << EOF > /etc/rancher/rke2/config.yaml
-token: "K109b26c2beb56ecf9be1750231cfe9c5424e363b8c9e0906aafdf8a6fd8d6857ea::server:71e81003e3bd194e62a11a3dbf1546aa"
+token: "K103aa5d4d436728d27850ee34b4f5b9766835d15f692f980d1d848625e3f3e3341::server:634a681cf67bea9493d3568f4c81e32d"
 server: https://loadbalancer:9345
 tls-san:
-  - 192.168.56.30
+  - 192.168.68.99
   - loadbalancer
-node-ip: "192.168.56.12"
+node-ip: "192.168.68.102"
 cni: "calico"
 write-kubeconfig-mode: "0644"
 EOF
@@ -118,6 +118,7 @@ systemctl enable rke2-server.service
 systemctl start rke2-server.service
 ```
 
+- Do the same steps for the next node, don't forget to change the "node-ip" with the ip of current node.
 #### Troubleshooting
 
 See logs to detect problem

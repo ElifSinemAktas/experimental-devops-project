@@ -4,16 +4,16 @@
 # Configuration variables
 MASTER_COUNT = 3
 WORKER_COUNT = 3
-MASTER_IP_PREFIX = "192.168.56."
-WORKER_IP_PREFIX = "192.168.56."
-LOADBALANCER_IP = "192.168.56.30"
-MASTER_IP_START = 10
-WORKER_IP_START = 20
+MASTER_IP_PREFIX = "192.168.68."
+WORKER_IP_PREFIX = "192.168.68."
+LOADBALANCER_IP = "192.168.68.100"
+MASTER_IP_START = 100
+WORKER_IP_START = 200
 
 # Ubuntu box version
-UBUNTU_BOX = "ubuntu/jammy64"
+UBUNTU_BOX = "generic/ubuntu2204"
 
-ENV['VAGRANT_DEFAULT_PROVIDER'] = "virtualbox"
+ENV['VAGRANT_DEFAULT_PROVIDER'] = "hyperv"
 
 # Host operating system detection
 module OS
@@ -47,77 +47,41 @@ end
 
 BRIDGE_ADAPTER = get_bridge_adapter()
 
-# Function to configure hosts file
+# Function to configure /etc/hosts on all nodes
 def configure_hosts(master_count, worker_count, master_ip_prefix, worker_ip_prefix, loadbalancer_ip)
   <<-SHELL
-    echo "Configuring /etc/hosts..."
+    echo "Starting /etc/hosts configuration on $(hostname)"
+    
+    # Remove problematic entries like 127.0.2.1
+    sudo sed -i '/127.0.2.1/d' /etc/hosts
+    
+    # Add proper entries for all nodes
     for i in $(seq 1 #{master_count}); do
-      echo "#{master_ip_prefix}$((#{MASTER_IP_START} + i)) master$i" >> /etc/hosts
+      echo "#{master_ip_prefix}$((#{MASTER_IP_START} + i)) master$i" | sudo tee -a /etc/hosts
     done
     for i in $(seq 1 #{worker_count}); do
-      echo "#{worker_ip_prefix}$((#{WORKER_IP_START} + i)) worker$i" >> /etc/hosts
+      echo "#{worker_ip_prefix}$((#{WORKER_IP_START} + i)) worker$i" | sudo tee -a /etc/hosts
     done
-    echo "#{loadbalancer_ip} loadbalancer" >> /etc/hosts
-  SHELL
-end
+    echo "#{loadbalancer_ip} loadbalancer" | sudo tee -a /etc/hosts
 
-# Google DNS configuration and check internet connectivity
-def configure_google_dns
-  <<-SHELL
-    echo "Configuring Google DNS..."
-    sudo sed -i 's/^#DNS=.*/DNS=8.8.8.8/' /etc/systemd/resolved.conf
-    sudo systemctl restart systemd-resolved
-
-    # Verify DNS configuration
-    if ! grep -q "8.8.8.8" /etc/systemd/resolved.conf; then
-        echo "Failed to set Google DNS." >&2
-        exit 1
-    fi
-
-    # Check internet connectivity
-    if ping -c 4 google.com > /dev/null; then
-        echo "Internet connection is active."
-    else
-        echo "Failed to connect to the internet." >&2
-        exit 1
-    fi
-  SHELL
-end
-
-# Updated SSH configuration and restart logic with error handling
-def configure_ssh
-  <<-SHELL
-    # Enable password authentication in sshd
-    sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-    sed -i 's/^KbdInteractiveAuthentication no/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
-    echo "PermitRootLogin yes" | sudo tee -a /etc/ssh/sshd_config
-
-    # Restart SSH service to apply changes
-    if systemctl restart sshd; then
-        echo "SSH service restarted successfully."
-    else
-        echo "Failed to restart SSH service." >&2
-        exit 1
-    fi
+    echo "Final /etc/hosts file:"
+    cat /etc/hosts
   SHELL
 end
 
 # Unified provisioning for all nodes
 def provision_node(master_count, worker_count, master_ip_prefix, worker_ip_prefix, loadbalancer_ip)
   <<-SHELL
+    echo "Starting provisioning for $(hostname)"
     sudo apt update && sudo apt upgrade -y
     sed -i "/swap/d" /etc/fstab
     swapoff -a
     systemctl disable --now ufw
 
-    # Configure SSH
-    #{configure_ssh}
-
-    # Configure Google DNS and check internet
-    #{configure_google_dns}
-
     # Configure hosts file
     #{configure_hosts(master_count, worker_count, master_ip_prefix, worker_ip_prefix, loadbalancer_ip)}
+
+    echo "Provisioning completed for $(hostname)"
   SHELL
 end
 
@@ -130,7 +94,7 @@ Vagrant.configure("2") do |config|
       master.vm.hostname = "master#{i}"
       master.vm.provider :virtualbox do |vb|
         vb.name = "master-#{i}"  # Custom VM name
-        vb.memory = 2048
+        vb.memory = 3072
         vb.cpus = 2
       end
       master.vm.provision "shell", inline: provision_node(MASTER_COUNT, WORKER_COUNT, MASTER_IP_PREFIX, WORKER_IP_PREFIX, LOADBALANCER_IP)
@@ -145,8 +109,8 @@ Vagrant.configure("2") do |config|
       worker.vm.hostname = "worker#{i}"
       worker.vm.provider :virtualbox do |vb|
         vb.name = "worker-#{i}"  # Custom VM name
-        vb.memory = 2048
-        vb.cpus = 2
+        vb.memory = 1024
+        vb.cpus = 1
       end
       worker.vm.provision "shell", inline: provision_node(MASTER_COUNT, WORKER_COUNT, MASTER_IP_PREFIX, WORKER_IP_PREFIX, LOADBALANCER_IP)
     end
@@ -159,8 +123,8 @@ Vagrant.configure("2") do |config|
     lb.vm.hostname = "loadbalancer"
     lb.vm.provider :virtualbox do |vb|
       vb.name = "loadbalancer"  # Custom VM name
-      vb.memory = 2048
-      vb.cpus = 2
+      vb.memory = 1024
+      vb.cpus = 1
     end
     lb.vm.provision "shell", inline: provision_node(MASTER_COUNT, WORKER_COUNT, MASTER_IP_PREFIX, WORKER_IP_PREFIX, LOADBALANCER_IP)
   end

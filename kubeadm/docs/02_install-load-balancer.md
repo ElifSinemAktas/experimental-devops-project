@@ -20,7 +20,7 @@ Edit the HAProxy configuration file to set up load balancing for your Kubernetes
 ```bash
 cat <<EOF | sudo tee /etc/haproxy/haproxy.cfg
 frontend kubernetes
-    bind 192.168.56.30:6443
+    bind 192.168.68.50:6443
     option tcplog
     mode tcp
     default_backend kubernetes-controlplane-nodes
@@ -29,8 +29,8 @@ backend kubernetes-controlplane-nodes
     mode tcp
     balance roundrobin
     option tcp-check
-    server controlplane01 192.168.56.10:6443 check fall 3 rise 2
-    server controlplane02 192.168.56.11:6443 check fall 3 rise 2
+    server controlplane01 192.168.68.100:6443 check fall 3 rise 2
+    server controlplane02 192.168.68.101:6443 check fall 3 rise 2
 EOF
 
 ```

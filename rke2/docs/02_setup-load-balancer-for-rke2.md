@@ -103,9 +103,7 @@ EOF
 ```
 
 > [!NOTE]
-> If you have problem with the code above, please use vi or nano to copy/paste the content of configuration.
-
-Save the configuration and exit.
+> If you have problem with the code above, please use vi or nano to copy/paste the content of configuration. Save the configuration and exit.
 
 
 #### Test, Restart and Control NGINX

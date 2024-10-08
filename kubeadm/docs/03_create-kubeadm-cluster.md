@@ -9,9 +9,9 @@ vagrant ssh controlplane01
 - Init kubeadm cluster
 
 ```bash
-sudo kubeadm init --control-plane-endpoint="192.168.56.30:6443" \
+sudo kubeadm init --control-plane-endpoint="192.168.68.50:6443" \
                   --pod-network-cidr=10.32.0.0/12 \
-                  --apiserver-advertise-address=192.168.56.10 \
+                  --apiserver-advertise-address=192.168.68.100 \
                   --upload-certs \
                   --v=5
 ```

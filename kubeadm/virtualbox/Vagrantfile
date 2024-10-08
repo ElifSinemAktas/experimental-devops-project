@@ -1,8 +1,8 @@
 # Network parameters for BRIDGE mode (Static IPs)
-IP_NW = "192.168.56"  # This will need to match your local network
-MASTER_IP_START = 10
-NODE_IP_START = 20
-LOAD_BALANCER_IP_START = 30
+IP_NW = "192.168.68"  # This will need to match your local network
+MASTER_IP_START = 100
+NODE_IP_START = 200
+LOAD_BALANCER_IP_START = 50
 
 # Host operating system detection
 module OS

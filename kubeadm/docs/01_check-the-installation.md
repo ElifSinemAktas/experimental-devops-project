@@ -37,13 +37,3 @@ ip a
 ```bash
 cat /etc/hosts
 ```
-
-Output  includes the entries below:
-
-```
-192.168.56.10 controlplane01
-192.168.56.11 controlplane02
-192.168.56.30 loadbalancer
-192.168.56.20 worker01
-192.168.56.21 worker02
-```

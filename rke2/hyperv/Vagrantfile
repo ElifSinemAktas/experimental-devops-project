@@ -1,0 +1,65 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :-
+
+# Configuration variables
+MASTER_COUNT = 3
+WORKER_COUNT = 3
+
+# Ubuntu box version
+UBUNTU_BOX = "generic/ubuntu2204"
+
+ENV['VAGRANT_DEFAULT_PROVIDER'] = "hyperv"
+
+# Unified provisioning for all nodes
+def provision_node
+  <<-SHELL
+    echo "Starting provisioning for $(hostname)"
+    sudo apt update && sudo apt upgrade -y
+    sed -i "/swap/d" /etc/fstab
+    swapoff -a
+    systemctl disable --now ufw
+    echo "Provisioning completed for $(hostname)"
+  SHELL
+end
+
+Vagrant.configure("2") do |config|
+  # Control Plane Nodes
+  (1..MASTER_COUNT).each do |i|
+    config.vm.define "master#{i}" do |master|
+      master.vm.box = UBUNTU_BOX
+      master.vm.hostname = "master#{i}"
+      master.vm.provider :hyperv do |h|
+        h.memory = 3072      # 3 GB RAM (Startup Memory)
+        h.maxmemory = 4096   # 4 GB RAM (Maximum Memory)
+        h.cpus = 2           # 2 CPUs
+      end
+      master.vm.provision "shell", inline: provision_node
+    end
+  end
+
+  # Worker Nodes
+  (1..WORKER_COUNT).each do |i|
+    config.vm.define "worker#{i}" do |worker|
+      worker.vm.box = UBUNTU_BOX
+      worker.vm.hostname = "worker#{i}"
+      worker.vm.provider :hyperv do |h|
+        h.memory = 1024      # 1 GB RAM (Startup Memory)
+        h.maxmemory = 3072   # 3 GB RAM (Maximum Memory)
+        h.cpus = 1           # 1 CPU
+      end
+      worker.vm.provision "shell", inline: provision_node
+    end
+  end
+
+  # Load Balancer
+  config.vm.define "loadbalancer" do |lb|
+    lb.vm.box = UBUNTU_BOX
+    lb.vm.hostname = "loadbalancer"
+    lb.vm.provider :hyperv do |h|
+      h.memory = 1024      # 1 GB RAM (Startup Memory)
+      h.maxmemory = 3072   # 3 GB RAM (Maximum Memory)
+      h.cpus = 1           # 1 CPU
+    end
+    lb.vm.provision "shell", inline: provision_node
+  end
+end
