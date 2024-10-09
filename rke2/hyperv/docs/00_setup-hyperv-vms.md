@@ -40,7 +40,7 @@ Setting address reservation is similar on each modem/router. See the example bel
 ![alt text](./images/image-dhcp.png)
 
 > [!NOTE]
-> I have router in my location and machines getting ip from this router. The range is 192.168.68.0/22. You'll see different IP range in my case.
+> I have router in my location and machines are getting ip from this router. The range is 192.168.68.0/22. You'll see different IP range in my case.
 
 Once we have IP's we need add ip/hostname record to VM's /etc/hosts to make machines to reach each other using their hostnames. Run the Update-VMHosts.ps1 script.
 
