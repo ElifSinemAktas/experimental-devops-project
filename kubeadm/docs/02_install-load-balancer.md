@@ -51,7 +51,7 @@ sudo systemctl restart haproxy
 To verify that HAProxy is correctly balancing the traffic, you can run the following command **from your worker nodes** or any machine that has access to the load balancer:
 
 ```bash
-curl -k https://192.168.56.30:6443/healthz
+curl -k https://192.168.68.50:6443/healthz
 ```
 
 - See haproxy documentation for more settings

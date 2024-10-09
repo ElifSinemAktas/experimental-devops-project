@@ -1,6 +1,12 @@
-## Setup RKE2
+## Setup RKE2 Servers
 
 #### Add first server node
+
+Connect to the master1 node
+
+```bash
+vagrant ssh master1
+```
 
 Change to root user
 
@@ -16,14 +22,18 @@ mkdir -p /etc/rancher/rke2/
 
 Next, create the RKE2 config file at /etc/rancher/rke2/config.yaml.
 
-**Note**: If you do not specify a pre-shared secret, RKE2 will generate one and place it at /var/lib/rancher/rke2/server/node-token.
+> [!NOTE] 
+> If you do not specify a pre-shared secret, RKE2 will generate one and place it at /var/lib/rancher/rke2/server/node-token.
+
+> [!NOTE] 
+> Don't forget to change the following IPs with yours.
 
 ```bash
 cat << EOF > /etc/rancher/rke2/config.yaml
 tls-san:
-  - 192.168.68.99
+  - 192.168.68.64
   - loadbalancer
-node-ip: "192.168.68.101"
+node-ip: "192.168.68.56"
 cni: "calico"
 write-kubeconfig-mode: "0644"
 EOF
@@ -83,6 +93,12 @@ cat /var/lib/rancher/rke2/server/node-token
 
 #### Add next server node
 
+Connect to the master2 node
+
+```bash
+vagrant ssh master2
+```
+
 Change to root user
 
 ```bash
@@ -95,16 +111,19 @@ Create same folder in next server node
 mkdir -p /etc/rancher/rke2/
 ```
 
+> [!NOTE] 
+> Don't share your token publicly if you're in production environment.
+
 Create config file
 
 ```bash
 cat << EOF > /etc/rancher/rke2/config.yaml
-token: "K103aa5d4d436728d27850ee34b4f5b9766835d15f692f980d1d848625e3f3e3341::server:634a681cf67bea9493d3568f4c81e32d"
+token: "K104303aaf38355ca166a5f7f29e57b4f2bbb11bf38c847f9823e7a8fad65bab126::server:bf9363e5c9552e25e02cda7d0c6f744c"
 server: https://loadbalancer:9345
 tls-san:
-  - 192.168.68.99
+  - 192.168.68.64
   - loadbalancer
-node-ip: "192.168.68.102"
+node-ip: "192.168.68.57"
 cni: "calico"
 write-kubeconfig-mode: "0644"
 EOF
@@ -118,7 +137,63 @@ systemctl enable rke2-server.service
 systemctl start rke2-server.service
 ```
 
-- Do the same steps for the next node, don't forget to change the "node-ip" with the ip of current node.
+Connect to the next node and perform the same steps. Just remember to change the node-ip in config file.
+
+- Use root user
+- Create rke2 folder
+- Create config file
+
+```bash
+cat << EOF > /etc/rancher/rke2/config.yaml
+token: "K104303aaf38355ca166a5f7f29e57b4f2bbb11bf38c847f9823e7a8fad65bab126::server:bf9363e5c9552e25e02cda7d0c6f744c"
+server: https://loadbalancer:9345
+tls-san:
+  - 192.168.68.64
+  - loadbalancer
+node-ip: "192.168.68.58"
+cni: "calico"
+write-kubeconfig-mode: "0644"
+EOF
+```
+
+#### Control Server
+
+```bash
+/var/lib/rancher/rke2/bin/kubectl \
+        --kubeconfig /etc/rancher/rke2/rke2.yaml get nodes
+```
+
+#### Add worker/agent node
+
+Perform the same steps for agents as well.
+
+- Use root user
+- Create rke2 folder
+- Create config file
+
+```bash
+cat << EOF > /etc/rancher/rke2/config.yaml
+token: "K104303aaf38355ca166a5f7f29e57b4f2bbb11bf38c847f9823e7a8fad65bab126::server:bf9363e5c9552e25e02cda7d0c6f744c"
+server: https://loadbalancer:9345
+node-ip: "192.168.68.61"
+cni: "calico"
+write-kubeconfig-mode: "0644"
+EOF
+```
+
+Run the installer and start service
+
+```bash
+curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE="agent" sh -
+```
+
+```bash
+systemctl enable rke2-agent.service
+```
+```bash
+systemctl start rke2-agent.service
+```
+
 #### Troubleshooting
 
 See logs to detect problem

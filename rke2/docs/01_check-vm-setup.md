@@ -15,7 +15,7 @@ vagrant ssh worker1
 
 #### Network Connectivity
 
-Check that all VMs can communicate with each other by their hostnames (configured via /etc/hosts). From any control plane or worker, ping the other nodes by their hostnames:
+Check that all VMs can communicate with each other by their hostnames (configured via /etc/hosts). From any control plane or worker, ping the other nodes by their hostnames
 
 ```bash
 ping master1
