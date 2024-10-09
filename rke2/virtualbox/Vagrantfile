@@ -2,18 +2,18 @@
 # vi: set ft=ruby :-
 
 # Configuration variables
-MASTER_COUNT = 3
-WORKER_COUNT = 3
-MASTER_IP_PREFIX = "192.168.68."
-WORKER_IP_PREFIX = "192.168.68."
-LOADBALANCER_IP = "192.168.68.100"
+NODE_COUNT = {
+  master: 3,
+  worker: 3
+}
+
+IP_PREFIX = "192.168.68."
+LOADBALANCER_IP = "#{IP_PREFIX}100"
 MASTER_IP_START = 100
 WORKER_IP_START = 200
 
 # Ubuntu box version
 UBUNTU_BOX = "generic/ubuntu2204"
-
-ENV['VAGRANT_DEFAULT_PROVIDER'] = "hyperv"
 
 # Host operating system detection
 module OS
@@ -48,16 +48,16 @@ end
 BRIDGE_ADAPTER = get_bridge_adapter()
 
 # Function to configure /etc/hosts on all nodes
-def configure_hosts(master_count, worker_count, master_ip_prefix, worker_ip_prefix, loadbalancer_ip)
+def configure_hosts(node_count, ip_prefix, loadbalancer_ip)
   <<-SHELL
     echo "Starting /etc/hosts configuration on $(hostname)"
     
     # Add proper entries for all nodes
-    for i in $(seq 1 #{master_count}); do
-      echo "#{master_ip_prefix}$((#{MASTER_IP_START} + i)) master$i" | sudo tee -a /etc/hosts
+    for i in $(seq 1 #{node_count[:master]}); do
+      echo "#{ip_prefix}$((#{MASTER_IP_START} + i)) master$i" | sudo tee -a /etc/hosts
     done
-    for i in $(seq 1 #{worker_count}); do
-      echo "#{worker_ip_prefix}$((#{WORKER_IP_START} + i)) worker$i" | sudo tee -a /etc/hosts
+    for i in $(seq 1 #{node_count[:worker]}); do
+      echo "#{ip_prefix}$((#{WORKER_IP_START} + i)) worker$i" | sudo tee -a /etc/hosts
     done
     echo "#{loadbalancer_ip} loadbalancer" | sudo tee -a /etc/hosts
 
@@ -67,7 +67,7 @@ def configure_hosts(master_count, worker_count, master_ip_prefix, worker_ip_pref
 end
 
 # Unified provisioning for all nodes
-def provision_node(master_count, worker_count, master_ip_prefix, worker_ip_prefix, loadbalancer_ip)
+def provision_node(node_count, ip_prefix, loadbalancer_ip)
   <<-SHELL
     echo "Starting provisioning for $(hostname)"
     sudo apt update && sudo apt upgrade -y
@@ -76,7 +76,7 @@ def provision_node(master_count, worker_count, master_ip_prefix, worker_ip_prefi
     systemctl disable --now ufw
 
     # Configure hosts file
-    #{configure_hosts(master_count, worker_count, master_ip_prefix, worker_ip_prefix, loadbalancer_ip)}
+    #{configure_hosts(node_count, ip_prefix, loadbalancer_ip)}
 
     echo "Provisioning completed for $(hostname)"
   SHELL
@@ -84,32 +84,32 @@ end
 
 Vagrant.configure("2") do |config|
   # Control Plane Nodes
-  (1..MASTER_COUNT).each do |i|
+  (1..NODE_COUNT[:master]).each do |i|
     config.vm.define "master#{i}" do |master|
       master.vm.box = UBUNTU_BOX
-      master.vm.network "public_network", bridge: BRIDGE_ADAPTER, ip: "#{MASTER_IP_PREFIX}#{MASTER_IP_START + i}"
+      master.vm.network "public_network", bridge: BRIDGE_ADAPTER, ip: "#{IP_PREFIX}#{MASTER_IP_START + i}"
       master.vm.hostname = "master#{i}"
       master.vm.provider :virtualbox do |vb|
         vb.name = "master-#{i}"  # Custom VM name
         vb.memory = 3072
         vb.cpus = 2
       end
-      master.vm.provision "shell", inline: provision_node(MASTER_COUNT, WORKER_COUNT, MASTER_IP_PREFIX, WORKER_IP_PREFIX, LOADBALANCER_IP)
+      master.vm.provision "shell", inline: provision_node(NODE_COUNT, IP_PREFIX, LOADBALANCER_IP)
     end
   end
 
   # Worker Nodes
-  (1..WORKER_COUNT).each do |i|
+  (1..NODE_COUNT[:worker]).each do |i|
     config.vm.define "worker#{i}" do |worker|
       worker.vm.box = UBUNTU_BOX
-      worker.vm.network "public_network", bridge: BRIDGE_ADAPTER, ip: "#{WORKER_IP_PREFIX}#{WORKER_IP_START + i}"
+      worker.vm.network "public_network", bridge: BRIDGE_ADAPTER, ip: "#{IP_PREFIX}#{WORKER_IP_START + i}"
       worker.vm.hostname = "worker#{i}"
       worker.vm.provider :virtualbox do |vb|
         vb.name = "worker-#{i}"  # Custom VM name
         vb.memory = 1024
         vb.cpus = 1
       end
-      worker.vm.provision "shell", inline: provision_node(MASTER_COUNT, WORKER_COUNT, MASTER_IP_PREFIX, WORKER_IP_PREFIX, LOADBALANCER_IP)
+      worker.vm.provision "shell", inline: provision_node(NODE_COUNT, IP_PREFIX, LOADBALANCER_IP)
     end
   end
 
@@ -123,6 +123,6 @@ Vagrant.configure("2") do |config|
       vb.memory = 1024
       vb.cpus = 1
     end
-    lb.vm.provision "shell", inline: provision_node(MASTER_COUNT, WORKER_COUNT, MASTER_IP_PREFIX, WORKER_IP_PREFIX, LOADBALANCER_IP)
+    lb.vm.provision "shell", inline: provision_node(NODE_COUNT, IP_PREFIX, LOADBALANCER_IP)
   end
 end
