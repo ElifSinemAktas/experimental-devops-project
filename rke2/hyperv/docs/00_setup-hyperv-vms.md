@@ -2,14 +2,14 @@
 
 Vagrant has limitations for networking settings in Hyper-v (Please see [Vagrant official document](https://developer.hashicorp.com/vagrant/docs/providers/hyperv/limitations)). 
 
-#### Create virtual switch
+### Create virtual switch
 
 ![alt text](./images/image-vs-1.png)
 
 ![alt text](./images/image-vs-2.png)
 
 
-#### Bring up machines
+### Bring up machines
 
 > [!NOTE]
 > While using Hyper-v with Vagrant, you need admin priviliges, run powershell or VSCode as administrator.
@@ -23,7 +23,7 @@ Vagrant has limitations for networking settings in Hyper-v (Please see [Vagrant 
     vagrant up 
     ```
 
-#### Apply DHCP address reservation
+### Apply DHCP address reservation
 
 We need static IPs for our nodes, and we can use DHCP reservations to prevent the VMs from getting different IPs after each reboot. I preferred not to set static IPs within the VMs themselves, as Vagrant might have trouble SSHing into the machines (if I'm not mistaken). To set up DHCP reservations, you'll need the current MAC addresses and IPs of the VMs. 
 
