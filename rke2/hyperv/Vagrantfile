@@ -8,8 +8,6 @@ WORKER_COUNT = 3
 # Ubuntu box version
 UBUNTU_BOX = "generic/ubuntu2204"
 
-ENV['VAGRANT_DEFAULT_PROVIDER'] = "hyperv"
-
 # Unified provisioning for all nodes
 def provision_node
   <<-SHELL
