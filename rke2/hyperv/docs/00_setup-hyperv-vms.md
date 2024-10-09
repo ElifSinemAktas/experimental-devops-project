@@ -10,8 +10,6 @@ Set up Virtual Switch
 > [!NOTE]
 > While using Hyper-v with Vagrant, you need admin priviliges, run powershell or VSCode as administrator.
 
-![alt text](./images/image-powershell.png)
-
 Bring up machines.
 
 ```
