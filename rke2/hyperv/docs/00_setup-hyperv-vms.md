@@ -1,6 +1,6 @@
 ## Set-Up Hyper-V VM's
 
-Set up Virtual Switch
+Create Virtual Switch
 
 ![alt text](./images/image-vs-1.png)
 
