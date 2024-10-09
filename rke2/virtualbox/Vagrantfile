@@ -52,9 +52,6 @@ def configure_hosts(master_count, worker_count, master_ip_prefix, worker_ip_pref
   <<-SHELL
     echo "Starting /etc/hosts configuration on $(hostname)"
     
-    # Remove problematic entries like 127.0.2.1
-    sudo sed -i '/127.0.2.1/d' /etc/hosts
-    
     # Add proper entries for all nodes
     for i in $(seq 1 #{master_count}); do
       echo "#{master_ip_prefix}$((#{MASTER_IP_START} + i)) master$i" | sudo tee -a /etc/hosts
