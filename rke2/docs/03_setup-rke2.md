@@ -163,6 +163,11 @@ EOF
         --kubeconfig /etc/rancher/rke2/rke2.yaml get nodes
 ```
 
+```bash
+/var/lib/rancher/rke2/bin/kubectl \
+        --kubeconfig /etc/rancher/rke2/rke2.yaml get pods -n kube-system
+```
+
 #### Add worker/agent node
 
 Perform the same steps for agents as well.
