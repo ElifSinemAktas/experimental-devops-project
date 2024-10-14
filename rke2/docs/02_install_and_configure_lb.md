@@ -3,7 +3,7 @@
 
 Now that you're moving forward with setting up the NGINX load balancer.
 
-#### SSH into your load balancer VM and install NGINX.
+#### SSH Into Your Load Balancer VM and Install Nginx
 
 ```bash
 vagrant ssh loadbalancer
@@ -47,7 +47,9 @@ sudo apt install nginx
 sudo nginx
 ```
 
-#### Verify stream module
+#### Verify Stream Module
+
+The stream module is required, which is present when using the official NGINX packages.
 
 ```bash
 nginx -V 2>&1 | grep -o with-stream
