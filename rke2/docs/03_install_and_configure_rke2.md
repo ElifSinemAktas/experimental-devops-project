@@ -79,7 +79,7 @@ mkdir -p /etc/rancher/rke2/
 ```
 
 > [!NOTE] 
-> Don't share your token publicly if you're in production environment.
+> I know no need to mention, but don't share your token publicly if you're in production environment:).
 
 Create config file
 
