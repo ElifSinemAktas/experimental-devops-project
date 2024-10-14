@@ -1,4 +1,4 @@
-## Setup RKE2 Servers
+## Install and Configure RKE2
 
 #### Add first server node
 

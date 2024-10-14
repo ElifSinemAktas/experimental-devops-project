@@ -1,5 +1,5 @@
 
-##  Setup Loadbalancer
+##  Install and Configure Load Balancer
 
 Now that you're moving forward with setting up the NGINX load balancer.
 
