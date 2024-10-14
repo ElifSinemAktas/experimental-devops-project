@@ -24,7 +24,4 @@ foreach ($vm in $vmNames) {
     
     # Write the formatted line to the new file mac_ip_vm.txt
     Add-Content -Path $outputFile -Value $line
-    
-    # Display the VM name, IP address, and MAC address
-    Write-Host "$line written to $outputFile"
 }

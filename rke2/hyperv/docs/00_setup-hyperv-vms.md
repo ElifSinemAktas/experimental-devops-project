@@ -4,8 +4,8 @@ Vagrant has limitations for networking settings in Hyper-v (Please see [Vagrant 
 
 ### Create virtual switch
 
+![alt text](./images/image-vs-0.png)
 ![alt text](./images/image-vs-1.png)
-
 ![alt text](./images/image-vs-2.png)
 
 
@@ -43,7 +43,7 @@ Setting address reservation is similar on each modem/router. See the example bel
 
 To enable a VM to communicate with other VMs using their hostnames, we need to add the IP addresses and hostnames of the other VMs to its /etc/hosts file. 
 
-I'll combine both following scripts in a single script later:) . 
+I'll combine both following scripts in a single script later:).
 
 Get IP address running following Generate-HostsFile.ps1. Script will provide hosts.txt file and in this file you'll see IP addresses.
 
