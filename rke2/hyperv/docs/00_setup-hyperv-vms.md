@@ -21,12 +21,15 @@ Run the following command in the directory where your Vagrantfile is located.
 vagrant up 
 ```
 
+![alt text](./images/image-vms.png)
+
 ### Apply DHCP address reservation
 
 We need static IPs for our nodes, and we can use DHCP reservations to prevent the VMs from getting different IPs after each reboot. I preferred not to set static IPs within the VMs themselves, as Vagrant might have trouble SSHing into the machines (if I'm not mistaken). To set up DHCP reservations, you'll need the current MAC addresses and IPs of the VMs. 
 
 
-Run the following script to get MAC, IP addresses with VM names.
+Run the following script [in the scripts directory](../scripts/) to get MAC, IP addresses with VM names.  
+
 
 ```shell
 Get-Mac-Ip.ps1
@@ -45,7 +48,7 @@ To enable a VM to communicate with other VMs using their hostnames, we need to a
 
 I'll combine both following scripts in a single script later:).
 
-Get IP address running following Generate-HostsFile.ps1. Script will provide hosts.txt file and in this file you'll see IP addresses.
+Get IP address running following Generate-HostsFile.ps1 file [in the scripts directory](../scripts/). Script will provide hosts.txt file and in this file you'll see IP addresses.
 
 ```shell
 Generate-HostsFile.ps1
