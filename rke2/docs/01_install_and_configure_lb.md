@@ -61,17 +61,6 @@ Edit the NGINX configuration to route traffic to your master nodes.
 
 ```
 cat <<EOF | sudo tee /etc/nginx/nginx.conf
-# Number of CPU cores
-worker_processes 2;
-
-# Maximum number of open file descriptors
-worker_rlimit_nofile 10240;
-
-# Maximum number of connections per worker
-events {
-    worker_connections 2048;
-}
-
 stream {
     # Layer 4 (TCP) load balancing for Kubernetes API (port 6443)
     upstream rke2_api {
