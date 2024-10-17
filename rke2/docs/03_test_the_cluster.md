@@ -1,6 +1,6 @@
 ## Test The Cluster
 
-#### Create an Apache Deployment
+### Create an Apache Deployment
 
 Create a file named apache-deployment.yaml then copy and paste the following content.
 
@@ -65,7 +65,7 @@ configmap/apache-html created
 This will create a basic Apache deployment that serves a custom HTML page.
 
 
-#### Expose Apache with a Service
+### Expose Apache with a Service
 
 Create a file named apache-service.yaml to expose Apache using NodePort
 
@@ -138,7 +138,7 @@ apache-service   NodePort    10.43.80.124   <none>        80:30597/TCP   2m48s
 kubernetes       ClusterIP   10.43.0.1      <none>        443/TCP        24h
 ```
 
-#### Access the Apache Web Server
+### Access the Apache Web Server
 
 Get the NodePort assigned to the apache-service
 
@@ -148,10 +148,10 @@ kubectl get services
 
 Look for apache-service and note the NodePort value (it will be in the range 30000–32767).
 
-Access the Apache web server in your browser using the IP of any worker node and the NodePort
+Access the Apache web server in your browser using the IP of any node and the NodePort
 
 ```bash
-http://192.168.68.56:30597
+http://worker1:30597
 ```
 
 You should see the custom "Welcome to Apache on Kubernetes" HTML page.
