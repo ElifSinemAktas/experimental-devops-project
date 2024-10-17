@@ -47,8 +47,6 @@ sudo apt install nginx
 sudo nginx
 ```
 
-### Verify Stream Module
-
 The stream module is required, which is present when using the official NGINX packages.
 
 ```bash
