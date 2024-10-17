@@ -164,8 +164,6 @@ worker1   Ready    <none>                      90s     v1.30.5+rke2r1
 ```
 
 
-
-
 ```bash
 /var/lib/rancher/rke2/bin/kubectl \
         --kubeconfig /etc/rancher/rke2/rke2.yaml get pods -n kube-system
@@ -231,13 +229,19 @@ clusters:
 ....
 ```
 
-- Add loadbalancer hostname to "c:\Windows\System32\Drivers\etc\hosts". Your ip can be different.
+- Add loadbalancer hostname to "c:\Windows\System32\Drivers\etc\hosts". I'll also add the other machines to the hosts. (Your ip can be different)
 
 **hosts file:**
 ```
 ....
 # End of section
 192.168.68.60 loadbalancer
+192.168.68.53 master1
+192.168.68.55 master2
+192.168.68.56 master3
+192.168.68.57 worker1
+192.168.68.58 worker2
+192.168.68.59 worker3
 ```
 
 Now we can check our config file by running
