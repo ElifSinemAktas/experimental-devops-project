@@ -38,7 +38,7 @@ shared-services   Active   18d
 works-on-local    Active   6s
 ```
 
-Take a look helm chart [in this directory](../../development/wol-user-service/helm-chart/).
+Create helm chart
 
 ```bash
 helm create user-service
@@ -47,12 +47,17 @@ helm create user-service
 Perform basic necessary changes (Take a look helm chart [in this directory](../../development/wol-user-service/helm-chart/)). You can always overwrite by using values.yaml.
 - Image name is changed
 - secret.yaml is added
-- secrets field is added to values.
+- secrets field is added to values.yaml
+- envs are added to deployment.yaml
 
+Check if there is a problem in the chart
+```bash
+helm lint
+```
 
 Provide release name (wol-user-service) and install
 ```bash
-helm install wol-user-service . -n works-on-local --set secrets.DATABASE_URL='postgresql://user:password@host:port/dbname'
+helm install wol-user-service . -n works-on-local --set secrets.DATABASE_URL=postgresql://user_service_user:user_service_pass@db-0-postgresql.shared-services.svc.cluster.local:5432/user_service_db --set secrets.SECRET_KEY=PshDMr4yrwXgCTmMpjIO1_Ll3LrDeKWvIaUntACc0Bc --set secrets.ALGORITHM=HS256 --set secrets.ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
 If you get error, uninstall, fix and install again

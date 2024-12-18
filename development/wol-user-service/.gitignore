@@ -1,0 +1,7 @@
+app/__pycache__/
+app/api/__pycache__/
+app/core/__pycache__/
+app/orm/__pycache__/
+app/api/routers/__pycache__/
+test.db
+.env
