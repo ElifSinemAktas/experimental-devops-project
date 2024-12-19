@@ -7,7 +7,6 @@ from app.orm import schemas, models
 
 router = APIRouter()
 
-
 @router.post("/signup", status_code=status.HTTP_201_CREATED, response_model=dict)
 def signup(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     existing_user = crud.get_user_by_email(db, user.email)

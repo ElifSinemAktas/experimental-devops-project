@@ -67,6 +67,7 @@ kubectl create namespace shared-services
 Create PV (Persistent Volume). Most Kubernetes clusters rely on a storage provisioner (e.g., for local disks, cloud provider volumes, or external storage systems) to dynamically allocate Persistent Volumes (PVs) for Persistent Volume Claims (PVCs).
 
 Run this command to install Longhorn (a dynamic storage provisioner) in your cluster.
+
 ```bash
 helm repo add longhorn https://charts.longhorn.io
 ```

@@ -9,7 +9,7 @@ replicaCount: 1
 image:
   repository: "docker.io/elifsinemaktas/wol-user-service"
   # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "0.1.0"
 
@@ -86,14 +86,19 @@ resources: {}
   #   memory: 128Mi
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-livenessProbe:
-  httpGet:
-    path: /
-    port: 8000
-readinessProbe:
-  httpGet:
-    path: /
-    port: 8000
+# livenessProbe:
+#   httpGet:
+#     path: /
+#     port: 8000
+# readinessProbe:
+#   httpGet:
+#     path: /
+#     port: 8000
+#   initialDelaySeconds: 10
+#   periodSeconds: 5
+#   timeoutSeconds: 1
+#   successThreshold: 1
+#   failureThreshold: 3
 
 #This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
@@ -125,3 +130,6 @@ affinity: {}
 # Add Secret
 secrets:
   DATABASE_URL: ""
+  SECRET_KEY: ""
+  ALGORITHM: ""
+  ACCESS_TOKEN_EXPIRE_MINUTES: 30

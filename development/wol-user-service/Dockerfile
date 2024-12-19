@@ -2,13 +2,13 @@
 FROM python:3.10-slim
 
 # Create a directory
-RUN mkdir /wol-user-service 
+RUN mkdir -p /wol-user-service/app
 
 # Set the working directory in the container
 WORKDIR /wol-user-service
 
 # Copy app folder 
-COPY ./app .
+COPY ./app ./app
 # Copy requirements 
 COPY ./requirements.txt .
 
