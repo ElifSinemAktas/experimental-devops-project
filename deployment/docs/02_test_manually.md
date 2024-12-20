@@ -73,7 +73,7 @@ Get the pod name
 kubectl get po -n works-on-local
 ```
 
-Run the command below (change pod name in the command)
+Run the command below (change pod name with yours in the command)
 ```bash
 kubectl port-forward pod/wol-user-service-7669dd957d-cw7n9 8000:8000 -n works-on-local
 ```

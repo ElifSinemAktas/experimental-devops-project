@@ -1,0 +1,105 @@
+## Deploy with Gitlab Runner
+
+<!-- ### Create Role and Role Binding
+
+kubectl get serviceaccount -n gitlab-runner
+
+`gitlab-runner-role.yaml`:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: works-on-local
+  name: gitlab-runner-role
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "pods", "services", "configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+```
+
+`gitlab-runner-role-binding.yaml`:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: works-on-local
+  name: gitlab-runner-rolebinding
+subjects:
+  - kind: ServiceAccount
+    name: gitlab-runner
+    namespace: gitlab-runner
+roleRef:
+  kind: Role
+  name: gitlab-runner-role
+  apiGroup: rbac.authorization.k8s.io
+``` -->
+
+### Configure Your `.gitlab-ci.yml` for Deployment
+
+Use the Kubernetes Runner to deploy your application.
+
+`.gitlab-ci.yml`:
+
+```yaml
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  tags:
+    - kubernetes # Use the tag assigned to your GitLab Runner
+  script:
+    - echo "Setting up Kubernetes context..."
+    - kubectl config set-cluster k8s-cluster --server=https://kubernetes.default.svc --insecure-skip-tls-verify=true
+    - kubectl config set-credentials deployer --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    - kubectl config set-context k8s-context --cluster=k8s-cluster --namespace=my-namespace --user=deployer
+    - kubectl config use-context k8s-context
+    - echo "Deploying application with Helm..."
+    - helm upgrade --install wol-user-service ./helm-chart -n works-on-local --set secrets.DATABASE_URL=postgresql://user_service_user:user_service_pass@db-0-postgresql.shared-services.svc.cluster.local:5432/user_service_db --set secrets.SECRET_KEY=PshDMr4yrwXgCTmMpjIO1_Ll3LrDeKWvIaUntACc0Bc --set secrets.ALGORITHM=HS256 --set secrets.ACCESS_TOKEN_EXPIRE_MINUTES=30 --set image.tag=$CI_COMMIT_SHA
+  only:
+    - main
+```
+
+The GitLab Runner pod uses the Kubernetes Service Account within the cluster to interact with the API.
+
+### RBAC for the GitLab Runner
+
+The Helm chart automatically creates an RBAC Role and binds it to the Runner's Service Account. By default, this allows the Runner to:
+- Manage resources in the cluster (`kubectl`, `helm` commands).
+
+If needed, you can customize the RBAC permissions by editing the Role created during the Runner installation:
+
+```bash
+kubectl edit role gitlab-runner -n gitlab-runner
+```
+
+### Test the Deployment
+
+Commit and push your `.gitlab-ci.yml` file to the `main` branch.
+
+Monitor the pipeline in GitLab to ensure the deployment job runs successfully.
+
+Check the status of your Helm release:
+   ```bash
+   helm list -n mynamespace
+   ```
+Verify that your pods are running:
+   ```bash
+   kubectl get pods -n mynamespace
+   ```
+
+### Optional: Add Kubernetes Secrets
+
+If your deployment requires sensitive information (e.g., database credentials, API keys):
+
+Add Kubernetes Secrets:
+   ```bash
+   kubectl create secret generic my-secret --from-literal=key=value -n mynamespace
+   ```
+
+Reference the Secrets in your Helm chart.

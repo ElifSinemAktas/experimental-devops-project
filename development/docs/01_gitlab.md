@@ -1,5 +1,8 @@
 ## Gitlab Group/Project Instructions
 
+### Example
+![alt text](../images/gitlab-1.png)
+
 ### Creating a Group
 
 1. Log in to your GitLab instance.
@@ -37,10 +40,12 @@
    - **Visibility Level**: Choose the visibility level (Private, Internal, or Public).
 6. Click the **Create project** button.
 
-![alt text](../images/gitlab-1.png)
-
 ### Additional Configuration
 
 - **Add members**: You can add members to your group, subgroup, or project by navigating to the **Members** tab and inviting users.
 - **Set permissions**: Configure permissions for different roles (Guest, Reporter, Developer, Maintainer, Owner).
 
+### Resources
+https://about.gitlab.com/blog/2024/07/22/best-practices-to-set-up-organizational-hierarchies-that-scale/
+
+https://docs.gitlab.com/ee/tutorials/manage_user/
