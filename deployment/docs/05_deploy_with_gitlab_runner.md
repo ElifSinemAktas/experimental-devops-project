@@ -120,7 +120,7 @@ kubectl create secret docker-registry gitlab-registry-secret `
   -n works-on-local
 ```
 
-### Configure Your `.gitlab-ci.yml` for Deployment
+### Configure Your Pipeline for Deployment
 
 Use the Kubernetes Runner to deploy your application.
 
