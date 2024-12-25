@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: works-on-local
+  name: automation-runner-role
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "pods", "services", "configmaps", "serviceaccounts"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]

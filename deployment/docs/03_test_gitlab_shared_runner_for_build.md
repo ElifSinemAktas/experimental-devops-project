@@ -4,8 +4,6 @@ Create **.gitlab-ci.yml** for building and pushing images
 
 The variables are already pre-defined for GitLab Container Registry if you're using Shared Runners, but you can override them if needed. (See https://docs.gitlab.com/ee/ci/variables/predefined_variables.html)
 
-Read about docker-in-docker
-
 ```yaml
 image: docker:26.1.1
 

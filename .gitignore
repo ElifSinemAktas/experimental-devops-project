@@ -1,3 +1,4 @@
+deployment/runner-values.yaml
 kubeadm/virtualbox/.vagrant
 rke2/virtualbox/.vagrant
 rke2/hyperv/.vagrant
