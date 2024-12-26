@@ -107,6 +107,37 @@ We'll pass these variables to values.yaml and helm will create secret then use i
 
 (What about using it directly without secret?)
 
+### Configure Your Pipeline for Deployment (with option-1 variables)
+
+Use the Kubernetes Runner to deploy your application.
+
+`.gitlab-ci.yml`:
+
+```yaml
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  tags:
+    - wol-kubernetes # Use the tag assigned to your GitLab Runner
+  image: alpine/k8s:1.27.3
+  script:
+    - echo "Setting up Kubernetes context..."
+    - kubectl config set-cluster k8s-cluster --server=https://kubernetes.default.svc --insecure-skip-tls-verify=true
+    - kubectl config set-credentials deployer --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    - kubectl config set-context k8s-context --cluster=k8s-cluster --namespace=works-on-local --user=deployer
+    - kubectl config use-context k8s-context
+    - echo "Deploying application with Helm..."
+    - helm upgrade --install wol-user-service ./helm-chart -n works-on-local --set secrets.DATABASE_URL=$DATABASE_URL --set secrets.SECRET_KEY=$SECRET_KEY --set secrets.ALGORITHM=$ALGORITHM --set secrets.ACCESS_TOKEN_EXPIRE_MINUTES=$ACCESS_TOKEN_EXPIRE_MINUTES --set image.tag=4c287a81a2c5bd6c4df3b8b652c037d4060f6fa6 --set image.repository=registry.gitlab.com/worksonlocal/engineering/wol-user-service --set-json imagePullSecrets='[{"name":"gitlab-registry-secret"}]'
+
+  environment:
+    name: dev
+    url: http://localhost:8080
+  only:
+    - main
+```
+
 ### Option 2- Use Kubernetes secret/configmap to store sensitive/non-sensitive variables
 
 Encode the content of your env file.
@@ -184,37 +215,6 @@ kubectl create secret docker-registry gitlab-registry-secret `
   --docker-password='<your-gitlab-password>' `
   --docker-email=your-email@example.com `
   -n works-on-local
-```
-
-### Configure Your Pipeline for Deployment (with option-1 variables)
-
-Use the Kubernetes Runner to deploy your application.
-
-`.gitlab-ci.yml`:
-
-```yaml
-stages:
-  - deploy
-
-deploy:
-  stage: deploy
-  tags:
-    - wol-kubernetes # Use the tag assigned to your GitLab Runner
-  image: alpine/k8s:1.27.3
-  script:
-    - echo "Setting up Kubernetes context..."
-    - kubectl config set-cluster k8s-cluster --server=https://kubernetes.default.svc --insecure-skip-tls-verify=true
-    - kubectl config set-credentials deployer --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-    - kubectl config set-context k8s-context --cluster=k8s-cluster --namespace=works-on-local --user=deployer
-    - kubectl config use-context k8s-context
-    - echo "Deploying application with Helm..."
-    - helm upgrade --install wol-user-service ./helm-chart -n works-on-local --set secrets.DATABASE_URL=$DATABASE_URL --set secrets.SECRET_KEY=$SECRET_KEY --set secrets.ALGORITHM=$ALGORITHM --set secrets.ACCESS_TOKEN_EXPIRE_MINUTES=$ACCESS_TOKEN_EXPIRE_MINUTES --set image.tag=4c287a81a2c5bd6c4df3b8b652c037d4060f6fa6 --set image.repository=registry.gitlab.com/worksonlocal/engineering/wol-user-service --set-json imagePullSecrets='[{"name":"gitlab-registry-secret"}]'
-
-  environment:
-    name: dev
-    url: http://localhost:8080
-  only:
-    - main
 ```
 
 ### Configure Your Pipeline for Deployment (with option-2 variables)
