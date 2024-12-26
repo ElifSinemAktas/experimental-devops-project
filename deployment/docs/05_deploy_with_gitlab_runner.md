@@ -98,17 +98,83 @@ Subjects:
   ServiceAccount  gitlab-runner  automation
 ```
 
-### Create Variables
-
-As a consensus, it is not best practice to set every variables/secrets like below.  I continue with this for just testing.
+### Option 1- Create Variables seperately
 
 ![alt text](../images/gitlab_var_1.png)
 ![alt text](../images/gitlab_var_2.png)
 
+We'll pass these variables to values.yaml and helm will create secret then use it in deployment.
+
+(What about using it directly without secret?)
+
+### Option 2- Use Kubernetes secret/configmap to store sensitive/non-sensitive variables
+
+Encode the content of your env file.
+
+For windows: 
+```bash
+certutil -encodehex -f path/to/myenvfile path/to/myenvfile.b64 0x40000001
+```
+For linux/wsl:
+
+```bash
+base64 -w 0 path/to/myenvfile > path/to/myenvfile.b64
+```
+
+Create wus-env-secret.yaml
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wus-env-secret
+  namespace: works-on-local
+type: Opaque
+data:
+  env-file: |
+    <your-encoded-file-content-here>
+```
+
+Run the following command
+
+```bash
+kubectl apply -f wus-env-secret.yaml
+```
+
+Remove "env:" field from values.yaml and add volume/volume mounts. mountPath should be same where our app file is located in our docker image. 
+
+```yaml
+# Additional volumes on the output Deployment definition.
+volumes: 
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+  - name: env-file-volume
+    secret:
+      secretName: wus-env-secret
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts:
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+  - name: env-file-volume
+    mountPath: /app/.env
+    subPath: env-file
+# ---------------- OTHER VALUES -----------
+## Add Secret/Env Seperately
+# secrets:
+#   DATABASE_URL: ""
+#   SECRET_KEY: ""
+#   ALGORITHM: ""
+#   ACCESS_TOKEN_EXPIRE_MINUTES: 30
+
+```
 
 ### Create Secret for Registry
 
-You can use my username/password or you can create an access token (under your profile settings) and use it in the command below.
+You can use gitlab username/password or you can create an personal access token (under your profile settings in Gitlab) and use it in the command below.
 (Access token have expiration date, and if you're using free account you cannot use service account and cannot set "no expiration date")
 
 ```shell
@@ -120,7 +186,7 @@ kubectl create secret docker-registry gitlab-registry-secret `
   -n works-on-local
 ```
 
-### Configure Your Pipeline for Deployment
+### Configure Your Pipeline for Deployment (with option-1 variables)
 
 Use the Kubernetes Runner to deploy your application.
 
@@ -151,3 +217,31 @@ deploy:
     - main
 ```
 
+### Configure Your Pipeline for Deployment (with option-2 variables)
+
+`.gitlab-ci.yml`:
+
+```yaml
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  tags:
+    - wol-kubernetes # Use the tag assigned to your GitLab Runner
+  image: alpine/k8s:1.27.3
+  script:
+    - echo "Setting up Kubernetes context..."
+    - kubectl config set-cluster k8s-cluster --server=https://kubernetes.default.svc --insecure-skip-tls-verify=true
+    - kubectl config set-credentials deployer --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    - kubectl config set-context k8s-context --cluster=k8s-cluster --namespace=works-on-local --user=deployer
+    - kubectl config use-context k8s-context
+    - echo "Deploying application with Helm..."
+    - helm upgrade --install wol-user-service ./helm-chart -n works-on-local --set image.tag=4c287a81a2c5bd6c4df3b8b652c037d4060f6fa6 --set image.repository=registry.gitlab.com/worksonlocal/engineering/wol-user-service --set-json imagePullSecrets='[{"name":"gitlab-registry-secret"}]'
+
+  environment:
+    name: dev
+    url: http://localhost:8080
+  only:
+    - main
+```

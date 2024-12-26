@@ -1,8 +1,14 @@
 ## Test gitlab shared runner
 
-Create **.gitlab-ci.yml** for building and pushing images
+Create **.gitlab-ci.yml** for building and pushing images to Gitlab Container Registry
 
 The variables are already pre-defined for GitLab Container Registry if you're using Shared Runners, but you can override them if needed. (See https://docs.gitlab.com/ee/ci/variables/predefined_variables.html)
+
+Read about docker-in-docker
+
+Create gitlab-ci.yaml and push it to the repo. This example will work only with main branch.
+
+`.gitlab-ci.yml`: 
 
 ```yaml
 image: docker:26.1.1

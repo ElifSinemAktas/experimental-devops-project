@@ -50,6 +50,86 @@ Perform basic necessary changes (Take a look helm chart [in this directory](../.
 - secrets field is added to values.yaml
 - envs are added to deployment.yaml
 
+
+`values.yaml`:
+
+```yaml
+image:
+  repository: "your-image-repository"
+  # This sets the pull policy for images.
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "commit-sha"
+
+# This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets:
+  - name: "your-secrets-to-use"
+# ---------------- OTHER VALUES -----------
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Add Secret at the end of the values
+secrets:
+  DATABASE_URL: ""
+  SECRET_KEY: ""
+  ALGORITHM: ""
+  ACCESS_TOKEN_EXPIRE_MINUTES: 30
+```
+
+`secret.yaml`:
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Chart.Name }}-secret
+type: Opaque
+data:
+  DATABASE_URL: {{ .Values.secrets.DATABASE_URL | b64enc }}
+  SECRET_KEY: {{ .Values.secrets.SECRET_KEY | b64enc }}
+  ALGORITHM: {{ .Values.secrets.ALGORITHM | b64enc }}
+  ACCESS_TOKEN_EXPIRE_MINUTES: {{ .Values.secrets.ACCESS_TOKEN_EXPIRE_MINUTES | toString | b64enc }}
+```
+
+`deployment.yaml`:
+```yaml
+spec:
+# ---------------- OTHER CONFIG -----------
+    template:
+    # ---------------- OTHER CONFIG -----------
+        spec:
+        # ---------------- OTHER CONFIG -----------
+            containers:
+                - name: {{ .Chart.Name }}
+                .... Other configurations....
+                ## Add env to the container
+                env:
+                    - name: DATABASE_URL
+                    valueFrom:
+                        secretKeyRef:
+                        name: {{ .Chart.Name }}-secret
+                        key: DATABASE_URL
+                    - name: SECRET_KEY
+                    valueFrom:
+                        secretKeyRef:
+                        name: {{ .Chart.Name }}-secret
+                        key: SECRET_KEY
+                    - name: ALGORITHM
+                    valueFrom:
+                        secretKeyRef:
+                        name: {{ .Chart.Name }}-secret
+                        key: ALGORITHM
+                    - name: ACCESS_TOKEN_EXPIRE_MINUTES
+                    valueFrom:
+                        secretKeyRef:
+                        name: {{ .Chart.Name }}-secret
+                        key: ACCESS_TOKEN_EXPIRE_MINUTES
+                # ---------------- OTHER CONFIG -----------
+```
+
+
 Check if there is a problem in the chart (run the command in the helm directory)
 ```bash
 helm lint
