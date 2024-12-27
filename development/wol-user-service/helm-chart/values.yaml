@@ -7,14 +7,16 @@ replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: "docker.io/elifsinemaktas/wol-user-service"
+  repository: "your-image-repository"
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.1.0"
+  tag: "commit-sha"
 
 # This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: []
+imagePullSecrets:
+  - name: "your-secrets-to-use"
+
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
@@ -109,17 +111,23 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # Additional volumes on the output Deployment definition.
-volumes: []
+volumes:
 # - name: foo
 #   secret:
 #     secretName: mysecret
 #     optional: false
+  - name: env-file-volume
+    secret:
+      secretName: wus-env-secret
 
 # Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
+volumeMounts:
 # - name: foo
 #   mountPath: "/etc/foo"
 #   readOnly: true
+  - name: env-file-volume
+    mountPath: "/wol-user-service/app/.env"
+    subPath: env-file
 
 nodeSelector: {}
 
@@ -127,9 +135,11 @@ tolerations: []
 
 affinity: {}
 
-# Add Secret
-secrets:
-  DATABASE_URL: ""
-  SECRET_KEY: ""
-  ALGORITHM: ""
-  ACCESS_TOKEN_EXPIRE_MINUTES: 30
+## Add Secret/Env Seperately
+# secrets:
+#   DATABASE_URL: ""
+#   SECRET_KEY: ""
+#   ALGORITHM: ""
+#   ACCESS_TOKEN_EXPIRE_MINUTES: 30
+
+# Add encoded env file from Gitlab

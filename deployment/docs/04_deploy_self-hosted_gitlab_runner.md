@@ -12,6 +12,7 @@ Keep the token for later use.
 
 ### Add the GitLab Helm Repository
 Add the GitLab Helm chart repository:
+
 ```bash
 helm repo add gitlab https://charts.gitlab.io
 helm repo update
@@ -34,10 +35,14 @@ https://docs.gitlab.com/runner/install/kubernetes_helm_chart_configuration.html
 
 https://gitlab.com/gitlab-org/charts/gitlab-runner/blob/main/values.yaml
 
+
+Create runner-values.yaml in your local
+
 ```shell
 helm show values gitlab/gitlab-runner > runner-values.yaml
 ```
-Change these settings below
+
+Provide your gitlab-url and token as seen below.
 
 ```
 ## How many old ReplicaSets for this Deployment you want to retain
@@ -57,6 +62,7 @@ runnerToken: "<your-token-here>"
 #
 ```
 
+Set RBAC and ServiceAccount
 ```
 rbac:
   ## Specifies whether a Role and RoleBinding should be created
@@ -79,7 +85,7 @@ serviceAccount:
   name: "gitlab-runner"
 ```
 
-If you don't change service_account, runner will use default service account while running jobs. (See: https://gitlab.com/gitlab-org/charts/gitlab-runner/-/issues/353)
+Set service account for runners. If you don't change service_account, runner will use default service account while running jobs. (See: https://gitlab.com/gitlab-org/charts/gitlab-runner/-/issues/353)
 
 ```
 runners:

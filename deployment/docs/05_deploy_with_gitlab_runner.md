@@ -1,8 +1,8 @@
-## Deploy with Gitlab Runner
+## Deploy with Self-Managed Gitlab Runner
 
 ### Create role and rolebinding
 
-The apps will run in works-on-local namespace, we want the gitlab-runner service account in the automation namespace to have the required permissions in the works-on-local namespace. This requires creating a Role in works-on-local and binding it to the gitlab-runner Service Account in automation.
+The apps will run in works-on-local namespace, we want the gitlab-runner service account in the automation namespace to have the required permissions in the works-on-local namespace. This requires creating a Role in works-on-local and binding it to the gitlab-runner Service Account in automation ns.
 
 ```bash
 kubectl get sa -n automation
@@ -205,8 +205,7 @@ volumeMounts:
 
 ### Create Secret for Registry
 
-You can use gitlab username/password or you can create an personal access token (under your profile settings in Gitlab) and use it in the command below.
-(Access token have expiration date, and if you're using free account you cannot use service account and cannot set "no expiration date")
+You can use gitlab username/password or you can create an personal access token (under your profile settings in Gitlab) and use it in the command below. (Access token have expiration date, and if you're using free account you cannot use service account and cannot set "no expiration date")
 
 ```shell
 kubectl create secret docker-registry gitlab-registry-secret `
@@ -244,4 +243,11 @@ deploy:
     url: http://localhost:8080
   only:
     - main
+```
+
+### Troubleshooting
+
+If you got error while upgrading my deployment because check the "patch" rule in the list of "automation-runner-role".
+```bash
+kubectl auth can-i patch deployments --as=system:serviceaccount:automation:gitlab-runner -n works-on-local
 ```

@@ -40,28 +40,28 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
-          ## Add env to the container
-          env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Chart.Name }}-secret
-                  key: DATABASE_URL
-            - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Chart.Name }}-secret
-                  key: SECRET_KEY
-            - name: ALGORITHM
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Chart.Name }}-secret
-                  key: ALGORITHM
-            - name: ACCESS_TOKEN_EXPIRE_MINUTES
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Chart.Name }}-secret
-                  key: ACCESS_TOKEN_EXPIRE_MINUTES
+          # ## Add env to the container
+          # env:
+          #   - name: DATABASE_URL
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: {{ .Chart.Name }}-secret
+          #         key: DATABASE_URL
+          #   - name: SECRET_KEY
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: {{ .Chart.Name }}-secret
+          #         key: SECRET_KEY
+          #   - name: ALGORITHM
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: {{ .Chart.Name }}-secret
+          #         key: ALGORITHM
+          #   - name: ACCESS_TOKEN_EXPIRE_MINUTES
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: {{ .Chart.Name }}-secret
+          #         key: ACCESS_TOKEN_EXPIRE_MINUTES
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
