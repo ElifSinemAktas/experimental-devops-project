@@ -25,10 +25,10 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["secrets", "pods", "services", "configmaps", "serviceaccounts"]
-    verbs: ["get", "list", "watch", "create", "update", "delete"]
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
   - apiGroups: ["apps"]
     resources: ["deployments", "replicasets", "statefulsets"]
-    verbs: ["get", "list", "watch", "create", "update", "delete"]
+    verbs: ["get", "list", "watch", "create", "update", "delete","patch"]
 ```
 
 ```bash
@@ -83,8 +83,8 @@ See rolebinding by running:
 ```bash
 kubectl describe rolebinding -n works-on-local automation-runner-rolebinding
 ```
-Output:
 
+Output:
 ```
 Name:         automation-runner-rolebinding
 Labels:       <none>
@@ -96,6 +96,12 @@ Subjects:
   Kind            Name           Namespace
   ----            ----           ---------
   ServiceAccount  gitlab-runner  automation
+```
+
+To check your authentication for performing something:
+
+```bash
+kubectl auth can-i patch deployments --as=system:serviceaccount:automation:gitlab-runner -n works-on-local
 ```
 
 ### Option 1- Create Variables seperately
@@ -124,12 +130,26 @@ deploy:
   image: alpine/k8s:1.27.3
   script:
     - echo "Setting up Kubernetes context..."
-    - kubectl config set-cluster k8s-cluster --server=https://kubernetes.default.svc --insecure-skip-tls-verify=true
+    # Set the Kubernetes cluster with the API server address
+    - kubectl config set-cluster k8s-cluster --server=https://kubernetes.default.svc --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    # Use the ServiceAccount token for authentication
     - kubectl config set-credentials deployer --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    # Configure the context with the namespace and credentials
     - kubectl config set-context k8s-context --cluster=k8s-cluster --namespace=works-on-local --user=deployer
+    # Switch to the configured context
     - kubectl config use-context k8s-context
+    
     - echo "Deploying application with Helm..."
-    - helm upgrade --install wol-user-service ./helm-chart -n works-on-local --set secrets.DATABASE_URL=$DATABASE_URL --set secrets.SECRET_KEY=$SECRET_KEY --set secrets.ALGORITHM=$ALGORITHM --set secrets.ACCESS_TOKEN_EXPIRE_MINUTES=$ACCESS_TOKEN_EXPIRE_MINUTES --set image.tag=4c287a81a2c5bd6c4df3b8b652c037d4060f6fa6 --set image.repository=registry.gitlab.com/worksonlocal/engineering/wol-user-service --set-json imagePullSecrets='[{"name":"gitlab-registry-secret"}]'
+    # Perform a Helm upgrade/install
+    - |     
+      helm upgrade --install wol-user-service ./helm-chart -n works-on-local \
+       --set secrets.DATABASE_URL=$DATABASE_URL \
+       --set secrets.SECRET_KEY=$SECRET_KEY \
+       --set secrets.ALGORITHM=$ALGORITHM \
+       --set secrets.ACCESS_TOKEN_EXPIRE_MINUTES=$ACCESS_TOKEN_EXPIRE_MINUTES \
+       --set image.tag=4c287a81a2c5bd6c4df3b8b652c037d4060f6fa6 \
+       --set image.repository=registry.gitlab.com/worksonlocal/engineering/wol-user-service \
+       --set-json imagePullSecrets=' \[{"name":"gitlab-registry-secret"}]'
 
   environment:
     name: dev
@@ -172,7 +192,7 @@ Run the following command
 kubectl apply -f wus-env-secret.yaml
 ```
 
-Remove "env:" field from values.yaml and add volume/volume mounts. mountPath should be same where our app file is located in our docker image. 
+Remove "env:" field from values.yaml and add volume/volume mounts.
 
 ```yaml
 # Additional volumes on the output Deployment definition.
@@ -231,23 +251,27 @@ deploy:
   image: alpine/k8s:1.27.3
   script:
     - echo "Setting up Kubernetes context..."
-    - kubectl config set-cluster k8s-cluster --server=https://kubernetes.default.svc --insecure-skip-tls-verify=true
+    # Set the Kubernetes cluster with the API server address
+    - kubectl config set-cluster k8s-cluster --server=https://kubernetes.default.svc --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    # Use the ServiceAccount token for authentication
     - kubectl config set-credentials deployer --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    # Configure the context with the namespace and credentials
     - kubectl config set-context k8s-context --cluster=k8s-cluster --namespace=works-on-local --user=deployer
+    # Switch to the configured context
     - kubectl config use-context k8s-context
+    
     - echo "Deploying application with Helm..."
-    - helm upgrade --install wol-user-service ./helm-chart -n works-on-local --set image.tag=4c287a81a2c5bd6c4df3b8b652c037d4060f6fa6 --set image.repository=registry.gitlab.com/worksonlocal/engineering/wol-user-service --set-json imagePullSecrets='[{"name":"gitlab-registry-secret"}]'
+    # Perform a Helm upgrade/install
+    - | 
+      helm upgrade --install wol-user-service ./helm-chart \
+        -n works-on-local \
+        --set image.tag=4c287a81a2c5bd6c4df3b8b652c037d4060f6fa6 \
+        --set image.repository=registry.gitlab.com/worksonlocal/engineering/wol-user-service \
+        --set-json imagePullSecrets='[{"name":"gitlab-registry-secret"}]'
 
   environment:
     name: dev
     url: http://localhost:8080
   only:
     - main
-```
-
-### Troubleshooting
-
-If you got error while upgrading my deployment because check the "patch" rule in the list of "automation-runner-role".
-```bash
-kubectl auth can-i patch deployments --as=system:serviceaccount:automation:gitlab-runner -n works-on-local
 ```

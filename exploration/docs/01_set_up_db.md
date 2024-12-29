@@ -120,7 +120,8 @@ Connect to the database
 kubectl exec -it db-0-postgresql-0 -n shared-services -- psql -U postgres
 ```
 
-Create new database, user with password
+Create new database, user with password for "production".
+
 ```sql
 CREATE DATABASE user_service_db;
 ```
@@ -146,7 +147,9 @@ CREATE USER user_service_user WITH PASSWORD 'user_service_pass';
 GRANT ALL PRIVILEGES ON DATABASE user_service_db TO user_service_user;
 ```
 
+```sql
 \c user_service_db
+```
 
 ```sql
 GRANT ALL PRIVILEGES ON SCHEMA public TO user_service_user;
@@ -154,6 +157,28 @@ GRANT ALL PRIVILEGES ON SCHEMA public TO user_service_user;
 
 ```sql
 SELECT schema_name, grantee, privilege_type FROM information_schema.role_schema_grants;
+```
+
+Create new database, user with password for "test".
+
+```sql
+CREATE DATABASE user_service_test_db;
+```
+
+```sql
+CREATE USER user_service_test_user WITH PASSWORD 'user_service_test_pass';
+```
+
+```sql
+GRANT ALL PRIVILEGES ON DATABASE user_service_test_db TO user_service_test_user;
+```
+
+```sql
+\c user_service_test_db
+```
+
+```sql
+GRANT ALL PRIVILEGES ON SCHEMA public TO user_service_test_user;
 ```
 
 ### Temporary port-forwarding to test
