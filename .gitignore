@@ -1,5 +1,5 @@
-exploration/runner-values.yaml
-exploration/wus-env-secret.yaml
+deployment/runner-values.yaml
+deployment/wus-env-secret.yaml
 kubeadm/virtualbox/.vagrant
 rke2/virtualbox/.vagrant
 rke2/hyperv/.vagrant

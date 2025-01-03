@@ -1,8 +1,6 @@
 ## Deploy with Self-Managed Gitlab Runner
 
-### Create role and rolebinding
-
-The apps will run in works-on-local namespace, we want the gitlab-runner service account in the automation namespace to have the required permissions in the works-on-local namespace. This requires creating a Role in works-on-local and binding it to the gitlab-runner Service Account in automation ns.
+### Create ClusterRole and ClusterrRolebinding
 
 ```bash
 kubectl get sa -n automation
@@ -14,84 +12,109 @@ default         0         26m
 gitlab-runner   0         3m14s
 ```
 
-Create Role in wol-automation-role.yaml file and use the content below.
+Create "automation-clusterrole.yaml" file and use the content below for ClusterRole.
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
-  namespace: works-on-local
-  name: automation-runner-role
+  name: automation-clusterrole
 rules:
   - apiGroups: [""]
     resources: ["secrets", "pods", "services", "configmaps", "serviceaccounts"]
     verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
   - apiGroups: ["apps"]
     resources: ["deployments", "replicasets", "statefulsets"]
-    verbs: ["get", "list", "watch", "create", "update", "delete","patch"]
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
 ```
 
 ```bash
-kubectl apply -f .\wol-automation-role.yaml
+kubectl apply -f .\resources\automation-clusterrole.yaml
 ```
 
 ```bash
-kubectl describe role automation-runner-role -n works-on-local
+kubectl get clusterrole
+```
+Output
+```
+NAME                                                                   CREATED AT
+admin                                                                  2024-10-16T11:57:02Z
+automation-clusterrole                                                 2025-01-03T12:16:07Z
+calico-node                                                            2024-10-16T11:57:32Z
+cluster-admin                                                          2024-10-16T11:57:02Z
+edit 
+```
+
+```bash
+kubectl describe cluster role automation-clusterrole 
 ```
 
 Output
 ```
-Name:         automation-runner-role
+Name:         automation-clusterrole
 Labels:       <none>
 Annotations:  <none>
 PolicyRule:
   Resources          Non-Resource URLs  Resource Names  Verbs
   ---------          -----------------  --------------  -----
-  configmaps         []                 []              [get list watch create update delete]
-  pods               []                 []              [get list watch create update delete]
-  secrets            []                 []              [get list watch create update delete]
-  serviceaccounts    []                 []              [get list watch create update delete]
-  services           []                 []              [get list watch create update delete]
-  deployments.apps   []                 []              [get list watch create update delete]
-  replicasets.apps   []                 []              [get list watch create update delete]
-  statefulsets.apps  []                 []              [get list watch create update delete]
+  configmaps         []                 []              [get list watch create update delete patch]
+  pods               []                 []              [get list watch create update delete patch]
+  secrets            []                 []              [get list watch create update delete patch]
+  serviceaccounts    []                 []              [get list watch create update delete patch]
+  services           []                 []              [get list watch create update delete patch]
+  deployments.apps   []                 []              [get list watch create update delete patch]
+  replicasets.apps   []                 []              [get list watch create update delete patch]
+  statefulsets.apps  []                 []              [get list watch create update delete patch]
 ```
 
-Create RoleBinding in wol-runner-rolebinding.yaml file. (bind gitlab-runner serviceaccount to this role)
+Create "runner-clusterrolebinding.yaml" file and use the content below for ClusterRoleBinding (bind gitlab-runner serviceaccount to this role)
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
-  namespace: works-on-local
-  name: automation-runner-rolebinding
+  name: automation-runner-clusterrolebinding
 subjects:
   - kind: ServiceAccount
     name: gitlab-runner
     namespace: automation
 roleRef:
-  kind: Role
-  name: automation-runner-role
+  kind: ClusterRole
+  name: automation-runner-clusterrole
   apiGroup: rbac.authorization.k8s.io
 ```
 
 ```bash
-kubectl apply -f .\wol-runner-rolebinding.yaml
+kubectl apply -f .\resources\automation-runner-clusterrolebinding.yaml
 ```
+
+```bash
+kubectl get clusterrolebinding
+```
+Output
+```
+NAME                                                            ROLE                                                                        AGE
+automation-runner-clusterrolebinding                            ClusterRole/automation-runner-clusterrole                                   37s
+canal-calico                                                    ClusterRole/calico-node                                                     79d    
+canal-flannel                                                   ClusterRole/flannel                                                         79d    
+cluster-admin                                                   ClusterRole/cluster-admin                                                   79d    
+helm-kube-system-rke2-canal                                     ClusterRole/cluster-admin                                                   79d  
+```
+
 
 See rolebinding by running:
 ```bash
-kubectl describe rolebinding -n works-on-local automation-runner-rolebinding
+kubectl describe clusterrolebinding automation-runner-clusterrolebinding
 ```
 
 Output:
 ```
-Name:         automation-runner-rolebinding
+Name:         automation-runner-clusterrolebinding
 Labels:       <none>
 Annotations:  <none>
 Role:
-  Kind:  Role
-  Name:  automation-runner-role
+  Kind:  ClusterRole
+  Name:  automation-clusterrole
 Subjects:
   Kind            Name           Namespace
   ----            ----           ---------
@@ -101,8 +124,16 @@ Subjects:
 To check your authentication for performing something:
 
 ```bash
-kubectl auth can-i patch deployments --as=system:serviceaccount:automation:gitlab-runner -n works-on-local
+kubectl auth can-i patch deployments --as=system:serviceaccount:automation:gitlab-runner -n wol-test
 ```
+
+
+```bash
+kubectl auth can-i patch deployments --as=system:serviceaccount:automation:gitlab-runner -n wol-prod
+```
+
+Both command should return as "yes"
+
 
 ### Option 1- Create Variables seperately
 

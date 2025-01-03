@@ -1,0 +1,5 @@
+CREATE DATABASE us_db;
+CREATE USER us_user WITH PASSWORD 'password';
+GRANT ALL PRIVILEGES ON DATABASE us_db TO us_user;
+\c us_db
+GRANT ALL PRIVILEGES ON SCHEMA public TO us_user;
