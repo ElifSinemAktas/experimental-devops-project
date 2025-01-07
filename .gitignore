@@ -6,4 +6,4 @@ rke2/hyperv/.vagrant
 rke2/hyperv/scripts/hosts.txt
 rke2/hyperv/scripts/mac_ip_vm.txt
 rke2/hyperv/scripts/python/mac_ip_vm.txt
-exploration/*
+exploration
