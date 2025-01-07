@@ -75,12 +75,6 @@ NAME                   READY   STATUS    RESTARTS   AGE
 test-db-postgresql-0   1/1     Running   0          62s
 ```
 
-If you want to connect via SQL Editor (Dbeaver etc), perform port-forwarding
-
-```bash
-kubectl port-forward test-db-postgresql-0 5432:5432 -n wol-test
-```
-
 ## Create Prod Postgresql Instance
 
 ```bash
@@ -114,3 +108,41 @@ Output:
 NAME                   READY   STATUS    RESTARTS   AGE
 prod-db-postgresql-0   1/1     Running   0          26s
 ```
+
+## Port Forwarding to Test
+
+If you want to connect via SQL Editor (Dbeaver etc), perform port-forwarding
+
+```bash
+kubectl port-forward test-db-postgresql-0 5432:5432 -n wol-test
+```
+
+```bash
+kubectl port-forward prod-db-postgresql-0 5432:5432 -n wol-prod
+```
+Then you can reach from "localhost:5342"
+
+
+## Getting hostname and creating connection string
+
+You're going to need hostname of postgresql instance within the cluster. 
+
+Check service name first:
+
+```bash
+kubectl get svc -n wol-test
+```
+```
+NAME                    TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE
+test-db-postgresql      ClusterIP   10.43.96.34   <none>        5432/TCP   2d21h
+```
+
+Hostname will be: **<service-name>.<namespace>.svc.cluster.local**
+
+```
+test-db-postgresql.wol-test.svc.cluster.local
+```
+
+Connection string: **postgresql://<user-name>:<user-password>@<hostname>:<port>/<database>**
+
+Same for prod instance...

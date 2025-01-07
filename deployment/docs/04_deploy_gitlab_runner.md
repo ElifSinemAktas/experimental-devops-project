@@ -1,4 +1,4 @@
-## Deploy GitLab Runner in the Same Kubernetes Cluster
+## Deploy GitLab Runner
 
 Before starting, go to the Settings > CI/CD > Runners and create new runner.
 
@@ -84,6 +84,14 @@ serviceAccount:
   ##
   name: "gitlab-runner"
 ```
+Make this Role/Service account able to perform cluster wide operations. No need to change rbac rules in this example. But,
+It is important to grant "optimized" permissions in real scenerio.
+
+```
+## Run the gitlab-bastion container with the ability to deploy/manage containers of jobs
+  ## cluster-wide or only within namespace
+  clusterWideAccess: true
+```
 
 Set service account for runners. If you don't change service_account, runner will use default service account while running jobs. (See: https://gitlab.com/gitlab-org/charts/gitlab-runner/-/issues/353)
 
@@ -104,7 +112,7 @@ runners:
 
 ```shell
 helm install gitlab-runner gitlab/gitlab-runner `
-    --namespace automation --create-namespace `
+    --namespace gitlab-runner --create-namespace `
     -f runner-values.yaml
 ```
 
@@ -113,15 +121,14 @@ helm install gitlab-runner gitlab/gitlab-runner `
 Check that the Runner pod is running:
 
 ```bash
-kubectl get pods -n automation
+kubectl get pods -n gitlab-runner
 ```
 You should see a pod for the GitLab Runner.
 
-Confirm that the Runner is registered in GitLab:
-- Go to **Settings > CI/CD > Runners** in your GitLab project.
-    ![alt text](../images/gitlab_runner_4.png)
+Confirm that the Runner is registered in GitLab. Go to **Settings > CI/CD > Runners** in your GitLab project. Click the runner and see the details such as description, job timeout, last contact, etc.
 
-- Click the runner and see the details such as description, job timeout, last contact, etc.
+![alt text](../images/gitlab_runner_4.png)
+
 
 
 
